@@ -1,0 +1,9 @@
+{
+  "db": {
+    "host": "mariadb",
+    "port": 3306,
+    "database": "InfP-WS2425-04",
+    "user": "InfP-WS2425-04",
+    "password": "ErJUVVyAzJzEaosu"
+  }
+}
