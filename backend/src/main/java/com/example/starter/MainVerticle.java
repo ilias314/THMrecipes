@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.JWTAuthHandler;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.PoolOptions;
@@ -15,12 +16,18 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
+import org.mindrot.jbcrypt.BCrypt;
+import io.vertx.ext.auth.JWTOptions;
+import io.vertx.ext.auth.PubSecKeyOptions;
+import io.vertx.ext.auth.jwt.JWTAuth;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainVerticle extends AbstractVerticle {
   private MySQLPool client;
+  private JWTAuth jwtProvider;
 
   @Override
   public void start(Promise<Void> startPromise) {
@@ -39,6 +46,11 @@ public class MainVerticle extends AbstractVerticle {
     PoolOptions poolOptions = new PoolOptions().setMaxSize(5);
     client = MySQLPool.pool(vertx, connectOptions, poolOptions);
 
+    jwtProvider = JWTAuth.create(vertx, new JWTAuthOptions()
+      .addPubSecKey(new PubSecKeyOptions()
+        .setAlgorithm("HS256")
+        .setBuffer("geheimes_jwt_schluessel")));
+
     // 📌 Verbindung testen
     client.getConnection(ar -> {
       if (ar.succeeded()) {
@@ -52,6 +64,11 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
 
+    // Auth-Routen
+    router.post("/register").handler(this::register);
+    router.post("/login").handler(this::login);
+    router.post("/logout").handler(this::logout);
+
     // User routes
     router.post("/users").handler(this::createUser);
     router.get("/users").handler(this::getAllUsers);
@@ -60,6 +77,8 @@ public class MainVerticle extends AbstractVerticle {
     router.delete("/users/:id").handler(this::deleteUser);
 
     // Recipe routes
+    JWTAuthHandler jwtAuthHandler = JWTAuthHandler.create(jwtProvider);
+    router.route("/recipes*").handler(jwtAuthHandler);
     router.post("/recipes").handler(this::addRecipe);
     router.get("/recipes").handler(this::getAllRecipes);
     router.get("/recipes/:id").handler(this::getRecipesById);
@@ -191,6 +210,55 @@ public class MainVerticle extends AbstractVerticle {
         context.response().setStatusCode(404).end("Benutzer nicht gefunden");
       }
     });
+  }
+
+  // ✅ Benutzer registrieren
+  private void register(RoutingContext context) {
+    JsonObject body = context.getBodyAsJson();
+    if (!isValidPassword(body.getString("password"))) {
+      context.response().setStatusCode(400).end("Passwort muss mindestens einen Großbuchstaben und zwei Ziffern enthalten.");
+      return;
+    }
+
+    String hashedPassword = BCrypt.hashpw(body.getString("password"), BCrypt.gensalt());
+    String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+
+    client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), hashedPassword), ar -> {
+      if (ar.succeeded()) {
+        context.response().setStatusCode(201).end("Benutzer erfolgreich registriert.");
+      } else {
+        context.response().setStatusCode(500).end("Fehler bei der Registrierung.");
+      }
+    });
+  }
+
+  // ✅ Benutzer-Login
+  private void login(RoutingContext context) {
+    JsonObject body = context.getBodyAsJson();
+    String sql = "SELECT id, password FROM users WHERE email = ?";
+
+    client.preparedQuery(sql).execute(Tuple.of(body.getString("email")), ar -> {
+      if (ar.succeeded() && ar.result().size() > 0) {
+        Row row = ar.result().iterator().next();
+        String storedPassword = row.getString("password");
+
+        if (BCrypt.checkpw(body.getString("password"), storedPassword)) {
+          String token = jwtProvider.generateToken(new JsonObject().put("userId", row.getInteger("id")),
+            new JWTOptions().setExpiresInMinutes(60));
+
+          context.response().putHeader("content-type", "application/json").end(new JsonObject().put("token", token).encode());
+        } else {
+          context.response().setStatusCode(401).end("Ungültige Anmeldeinformationen.");
+        }
+      } else {
+        context.response().setStatusCode(401).end("Benutzer nicht gefunden.");
+      }
+    });
+  }
+
+  // ✅ Benutzer-Logout (nur Token löschen)
+  private void logout(RoutingContext context) {
+    context.response().setStatusCode(200).end("Erfolgreich abgemeldet.");
   }
 
   // Recipe handlers
