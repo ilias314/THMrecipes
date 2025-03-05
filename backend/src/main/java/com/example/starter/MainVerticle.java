@@ -3,6 +3,7 @@ package com.example.starter;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -10,9 +11,10 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,49 +23,188 @@ public class MainVerticle extends AbstractVerticle {
   private MySQLPool client;
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
+  public void start(Promise<Void> startPromise) {
+    System.out.println("🚀 Server wird gestartet...");
 
-    // Load configuration from the config.json file
-    JsonObject config = vertx.fileSystem().readFileBlocking("config.json").toJsonObject();
-
-    // Configure MySQL client
+    // 🔹 MariaDB-Verbindungsoptionen
     MySQLConnectOptions connectOptions = new MySQLConnectOptions()
-      .setHost(config.getJsonObject("db").getString("host", "localhost"))
-      .setPort(config.getJsonObject("db").getInteger("port", 3306))
-      .setDatabase(config.getJsonObject("db").getString("database", "recipes_db"))
-      .setUser(config.getJsonObject("db").getString("user", "root"))
-      .setPassword(config.getJsonObject("db").getString("password", "ErJUVVyAzJzEaosu"));
+      .setPort(3306)
+      .setHost("ip1-dbs.mni.thm.de")  // Host anpassen
+      .setDatabase("InfP-WS2425-04")   // Datenbankname
+      .setUser("InfP-WS2425-04")              // Dein Benutzername
+      .setPassword("ErJUVVyAzJzEaosu")   // Dein Passwort
+      .setSslMode(io.vertx.mysqlclient.SslMode.DISABLED) // Falls SSL erforderlich
+      .setTrustAll(true); // Falls der Server ein unsicheres Zertifikat hat
 
     PoolOptions poolOptions = new PoolOptions().setMaxSize(5);
-
     client = MySQLPool.pool(vertx, connectOptions, poolOptions);
 
+    // 📌 Verbindung testen
+    client.getConnection(ar -> {
+      if (ar.succeeded()) {
+        System.out.println("✅ Erfolgreich mit MariaDB verbunden!");
+      } else {
+        System.err.println("❌ Verbindung zu MariaDB fehlgeschlagen: " + ar.cause().getMessage());
+      }
+    });
 
-    Router router =Router.router(vertx);
+    // 📌 Router & CRUD-Routen
+    Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
 
+    // User routes
+    router.post("/users").handler(this::createUser);
+    router.get("/users").handler(this::getAllUsers);
+    router.get("/users/:id").handler(this::getUserById);
+    router.put("/users/:id").handler(this::updateUser);
+    router.delete("/users/:id").handler(this::deleteUser);
+
+    // Recipe routes
     router.post("/recipes").handler(this::addRecipe);
     router.get("/recipes").handler(this::getAllRecipes);
     router.get("/recipes/:id").handler(this::getRecipesById);
     router.put("/recipes/:id").handler(this::updateRecipe);
     router.delete("/recipes/:id").handler(this::deleteRecipe);
 
+    router.get("/users/:userId/recipes").handler(this::getRecipesByUserId);
 
-    vertx.createHttpServer()
-      .requestHandler(router)
-      .listen(8888).onComplete(http -> {
-        if (http.succeeded()) {
-          startPromise.complete();
-          System.out.println("HTTP server started on port 8888");
+    vertx.createHttpServer().requestHandler(router).listen(8888, http -> {
+      if (http.succeeded()) {
+        startPromise.complete();
+        System.out.println("✅ HTTP-Server läuft auf Port 8080");
       } else {
+        System.err.println("❌ Fehler beim Starten des Servers: " + http.cause().getMessage());
         startPromise.fail(http.cause());
       }
     });
   }
 
+  // 📌 CREATE: Benutzer erstellen
+  private void createUser(RoutingContext context) {
+    JsonObject body = context.getBodyAsJson();
+
+    // Überprüfe, ob alle erforderlichen Felder vorhanden sind
+    if (body == null || !body.containsKey("username") ||
+      !body.containsKey("email") || !body.containsKey("password")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Fehlende Daten: username, email und password sind erforderlich.").encode());
+      return;
+    }
+
+    String username = body.getString("username");
+    String email = body.getString("email");
+    String password = body.getString("password");
+
+    // Passwortvalidierung: Mindestens ein Großbuchstabe und zwei Ziffern
+    if (!isValidPassword(password)) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Das Passwort muss mindestens einen Großbuchstaben und mindestens zwei Ziffern enthalten.").encode());
+      return;
+    }
+
+    // SQL zum Einfügen des Benutzers
+    String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+
+    client.preparedQuery(sql).execute(Tuple.of(username, email, password), ar -> {
+      if (ar.succeeded()) {
+        context.response()
+          .setStatusCode(201)
+          .end(new JsonObject().put("message", "User erfolgreich erstellt.").encode());
+      } else {
+        System.err.println("❌ Fehler beim Einfügen in die DB: " + ar.cause().getMessage());
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Fehler beim Erstellen des Benutzers: " + ar.cause().getMessage()).encode());
+      }
+    });
+  }
+
+  /**
+   * Überprüft, ob das Passwort mindestens einen Großbuchstaben und zwei Ziffern enthält.
+   */
+  private boolean isValidPassword(String password) {
+    return password.matches("^(?=.*[A-Z])(?=(.*\\d){2,}).{6,}$");
+  }
+
+  // 📌 READ: Alle Benutzer abrufen
+  private void getAllUsers(RoutingContext context) {
+    client.query("SELECT id, username, email FROM users").execute(ar -> {
+      if (ar.succeeded()) {
+        RowSet<Row> rows = ar.result();
+        JsonArray users = new JsonArray();
+        for (Row row : rows) {
+          users.add(new JsonObject()
+            .put("id", row.getInteger("id"))
+            .put("username", row.getString("username"))
+            .put("email", row.getString("email")));
+        }
+        context.response().putHeader("content-type", "application/json").end(users.encode());
+      } else {
+        System.err.println("❌ Fehler beim Abrufen von Benutzern: " + ar.cause().getMessage());
+        context.response().setStatusCode(500).end("Fehler: " + ar.cause().getMessage());
+      }
+    });
+  }
+
+  // 📌 READ: Benutzer nach ID abrufen
+  private void getUserById(RoutingContext context) {
+    String id = context.pathParam("id");
+    client.preparedQuery("SELECT id, username, email FROM users WHERE id = ?").execute(Tuple.of(Integer.parseInt(id)), ar -> {
+      if (ar.succeeded() && ar.result().size() > 0) {
+        context.response().putHeader("content-type", "application/json").end(ar.result().iterator().next().toJson().encode());
+      } else {
+        System.err.println("❌ Benutzer nicht gefunden: ID " + id);
+        context.response().setStatusCode(404).end("Benutzer nicht gefunden");
+      }
+    });
+  }
+
+  // 📌 UPDATE: Benutzer aktualisieren
+  private void updateUser(RoutingContext context) {
+    String id = context.pathParam("id");
+    JsonObject body = context.getBodyAsJson();
+    if (body == null || !body.containsKey("username") || !body.containsKey("email") || !body.containsKey("password")) {
+      context.response().setStatusCode(400).end("❌ Fehlende Daten");
+      return;
+    }
+    String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
+    client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), body.getString("password"), Integer.parseInt(id)), ar -> {
+      if (ar.succeeded() && ar.result().rowCount() > 0) {
+        context.response().end("✅ Benutzer aktualisiert");
+      } else {
+        System.err.println("❌ Fehler beim Aktualisieren des Benutzers: ID " + id);
+        context.response().setStatusCode(404).end("Benutzer nicht gefunden oder keine Änderung");
+      }
+    });
+  }
+
+  // 📌 DELETE: Benutzer löschen
+  private void deleteUser(RoutingContext context) {
+    String id = context.pathParam("id");
+    client.preparedQuery("DELETE FROM users WHERE id = ?").execute(Tuple.of(Integer.parseInt(id)), ar -> {
+      if (ar.succeeded() && ar.result().rowCount() > 0) {
+        context.response().setStatusCode(204).end();
+      } else {
+        System.err.println("❌ Fehler beim Löschen des Benutzers: ID " + id);
+        context.response().setStatusCode(404).end("Benutzer nicht gefunden");
+      }
+    });
+  }
+
+  // Recipe handlers
   private void addRecipe(RoutingContext routingContext) {
     JsonObject body = routingContext.getBodyAsJson();
+    if (body == null) {
+      routingContext.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Request body is required").encode());
+      return;
+    }
+
     Rezept rezept = body.mapTo(Rezept.class);
+    System.out.println("Adding recipe: " + rezept.getTitle());
 
     client.getConnection(conn -> {
       if (conn.succeeded()) {
@@ -77,14 +218,21 @@ public class MainVerticle extends AbstractVerticle {
                 .putHeader("content-type", "application/json")
                 .end(Json.encodePrettily(rezept));
             } else {
-              routingContext.fail(500);
+              System.err.println("❌ Error inserting recipe: " + ar.cause().getMessage());
+              routingContext.response()
+                .setStatusCode(500)
+                .end(new JsonObject().put("message", "Failed to insert recipe: " + ar.cause().getMessage()).encode());
             }
           });
       } else {
-        routingContext.fail(conn.cause());
+        System.err.println("❌ Failed to connect to database: " + conn.cause().getMessage());
+        routingContext.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Failed to connect to database: " + conn.cause().getMessage()).encode());
       }
     });
   }
+
 
   private void getAllRecipes(RoutingContext routingContext) {
     client.getConnection(conn -> {
@@ -118,6 +266,7 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
   private void getRecipesById(RoutingContext routingContext) {
     String id = routingContext.request().getParam("id");
 
@@ -198,6 +347,53 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+  private void getRecipesByUserId(RoutingContext routingContext) {
+    String userId = routingContext.request().getParam("userId");
 
+    // Validate the user ID
+    if (userId == null || userId.isEmpty()) {
+      routingContext.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "User ID is required").encode());
+      return;
+    }
 
+    // Query the database for recipes associated with the user ID
+    client.getConnection(conn -> {
+      if (conn.succeeded()) {
+        SqlConnection connection = conn.result();
+        connection.preparedQuery("SELECT * FROM recipes WHERE user_id = ?")
+          .execute(Tuple.of(Integer.parseInt(userId)), ar -> {
+            connection.close(); // Always close the connection
+            if (ar.succeeded()) {
+              RowSet<Row> rows = ar.result();
+              List<Rezept> recipes = new ArrayList<>();
+
+              // Map rows to Rezept objects
+              for (Row row : rows) {
+                Rezept rezept = new Rezept();
+                rezept.setId(row.getInteger("id"));
+                rezept.setUserId(row.getInteger("user_id"));
+                rezept.setTitle(row.getString("title"));
+                rezept.setDescription(row.getString("description"));
+                rezept.setIngredients(Json.decodeValue(row.getString("ingredients"), List.class));
+                rezept.setInstructions(Json.decodeValue(row.getString("instructions"), List.class));
+                rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
+                recipes.add(rezept);
+              }
+
+              // Return the recipes as JSON
+              routingContext.response()
+                .setStatusCode(200)
+                .putHeader("content-type", "application/json")
+                .end(Json.encodePrettily(recipes));
+            } else {
+              routingContext.fail(500); // Internal server error
+            }
+          });
+      } else {
+        routingContext.fail(conn.cause()); // Connection failed
+      }
+    });
   }
+}

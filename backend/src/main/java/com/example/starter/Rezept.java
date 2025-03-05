@@ -1,5 +1,5 @@
 package com.example.starter;
-import java.time.LocalDateTime;
+
 import java.util.List;
 
 public class Rezept {
@@ -7,8 +7,8 @@ public class Rezept {
   private int userId;
   private String title;
   private String description;
-  private List<String> ingredients;  // Change to List<String>
-  private List<String> instructions;
+  private List<String> ingredients;  // List of ingredients
+  private List<String> instructions; // List of instructions
   private String createdAt;
 
   // Getters and Setters
