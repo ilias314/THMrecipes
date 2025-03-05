@@ -369,52 +369,75 @@ public class MainVerticle extends AbstractVerticle {
 
   // Handler for updating a recipe
   private void updateRecipe(RoutingContext routingContext) {
-    String id = routingContext.request().getParam("id");
-    JsonObject body = routingContext.getBodyAsJson();
-    Rezept updatedRecipe = body.mapTo(Rezept.class);
+    String recipeId = routingContext.pathParam("id");
+    JsonObject body = routingContext.body().asJsonObject();
+    Integer userIdFromToken = routingContext.user().principal().getInteger("userId");
 
-    client.getConnection(conn -> {
-      if (conn.succeeded()) {
-        SqlConnection connection = conn.result();
-        connection.preparedQuery("UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ? WHERE id = ?")
-          .execute(Tuple.of(updatedRecipe.getTitle(), updatedRecipe.getDescription(), updatedRecipe.getIngredients(), updatedRecipe.getInstructions(), Integer.parseInt(id)), ar -> {
-            connection.close();
-            if (ar.succeeded()) {
-              routingContext.response()
-                .setStatusCode(200)
-                .putHeader("content-type", "application/json")
-                .end(Json.encodePrettily(updatedRecipe));
-            } else {
-              routingContext.fail(500);
-            }
-          });
+    // Check if the recipe exists and belongs to the user
+    String checkOwnershipQuery = "SELECT user_id FROM recipes WHERE id = ?";
+    client.preparedQuery(checkOwnershipQuery).execute(Tuple.of(Integer.parseInt(recipeId)), checkResult -> {
+      if (checkResult.succeeded() && checkResult.result().size() > 0) {
+        int ownerId = checkResult.result().iterator().next().getInteger("user_id");
+
+        if (ownerId != userIdFromToken) {
+          routingContext.response().setStatusCode(403).end("Forbidden: You can only modify your own recipes.");
+          return;
+        }
+
+        // Update the recipe
+        String updateQuery = "UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ? WHERE id = ?";
+        Tuple params = Tuple.of(
+          body.getString("title", ""), // Default to empty string if not provided
+          body.getString("description", ""), // Default to empty string if not provided
+          Json.encode(body.getJsonArray("ingredients", new JsonArray())), // Default to empty JsonArray if not provided
+          Json.encode(body.getJsonArray("instructions", new JsonArray())), // Default to empty JsonArray if not provided
+          Integer.parseInt(recipeId)
+        );
+
+        client.preparedQuery(updateQuery).execute(params, updateResult -> {
+          if (updateResult.succeeded()) {
+            routingContext.response().setStatusCode(200).end("Recipe updated");
+          } else {
+            System.err.println("❌ Error updating recipe: " + updateResult.cause().getMessage());
+            routingContext.response().setStatusCode(500).end("Failed to update recipe");
+          }
+        });
       } else {
-        routingContext.fail(conn.cause());
+        routingContext.response().setStatusCode(404).end("Recipe not found");
       }
     });
   }
+
 
   // Handler for deleting a recipe
   private void deleteRecipe(RoutingContext routingContext) {
-    String id = routingContext.request().getParam("id");
+    String recipeId = routingContext.pathParam("id");
+    Integer userIdFromToken = routingContext.user().principal().getInteger("userId");
 
-    client.getConnection(conn -> {
-      if (conn.succeeded()) {
-        SqlConnection connection = conn.result();
-        connection.preparedQuery("DELETE FROM recipes WHERE id = ?")
-          .execute(Tuple.of(Integer.parseInt(id)), ar -> {
-            connection.close();
-            if (ar.succeeded()) {
-              routingContext.response().setStatusCode(204).end();
-            } else {
-              routingContext.fail(500);
-            }
-          });
+    String checkOwnershipQuery = "SELECT user_id FROM recipes WHERE id = ?";
+    client.preparedQuery(checkOwnershipQuery).execute(Tuple.of(Integer.parseInt(recipeId)), checkResult -> {
+      if (checkResult.succeeded() && checkResult.result().size() > 0) {
+        int ownerId = checkResult.result().iterator().next().getInteger("user_id");
+
+        if (ownerId != userIdFromToken) {
+          routingContext.response().setStatusCode(403).end("Forbidden: You can only delete your own recipes.");
+          return;
+        }
+
+        String deleteQuery = "DELETE FROM recipes WHERE id = ?";
+        client.preparedQuery(deleteQuery).execute(Tuple.of(Integer.parseInt(recipeId)), deleteResult -> {
+          if (deleteResult.succeeded()) {
+            routingContext.response().setStatusCode(200).end("Recipe deleted");
+          } else {
+            routingContext.response().setStatusCode(500).end("Failed to delete recipe");
+          }
+        });
       } else {
-        routingContext.fail(conn.cause());
+        routingContext.response().setStatusCode(404).end("Recipe not found");
       }
     });
   }
+
   private void getRecipesByUserId(RoutingContext routingContext) {
     String userId = routingContext.request().getParam("userId");
 
