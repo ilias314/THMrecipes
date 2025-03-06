@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Registrierung</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+<h2 class="text-center">Login & Registrierung</h2>
+
+<div class="card p-4">
+    <h4>Registrieren</h4>
+    <input type="text" id="username" placeholder="Benutzername" class="form-control mb-2">
+    <input type="email" id="email" placeholder="E-Mail" class="form-control mb-2">
+    <input type="password" id="register-password" placeholder="Passwort" class="form-control mb-2">
+    <button onclick="register()" class="btn btn-primary w-100">Registrieren</button>
+</div>
+
+<div class="card p-4 mt-4">
+    <h4>Login</h4>
+    <input type="email" id="login-email" placeholder="E-Mail" class="form-control mb-2">
+    <input type="password" id="login-password" placeholder="Passwort" class="form-control mb-2">
+    <button onclick="login()" class="btn btn-success w-100">Login</button>
+</div>
+
+<button onclick="logout()" class="btn btn-danger w-100 mt-4">Logout</button>
+
+<script>
+
+    async function register() {
+        const username = document.getElementById("username").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        // 🔥 Überprüfung, ob alle Felder ausgefüllt sind
+        if (!username || !email || !password) {
+            alert("Bitte fülle alle Felder aus!");
+            return;
+        }
+
+        const userData = {
+            username: username,
+            email: email,
+            password: password
+        };
+
+        try {
+            const response = await fetch("http://localhost:8080/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert("Fehler: " + errorData.error); // Fehler aus Backend anzeigen
+                return;
+            }
+
+            const data = await response.json();
+            alert(data.message); // Erfolgreiche Registrierung
+        } catch (error) {
+            console.error("Fehler bei der Anfrage:", error);
+            alert("Verbindungsfehler zum Server!");
+        }
+    }
+
+
+    async function login() {
+        const response = await fetch("http://localhost:8080/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: document.getElementById("login-email").value,
+                password: document.getElementById("login-password").value
+            })
+        });
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem("token", data.token);
+            alert("Erfolgreich eingeloggt!");
+        } else {
+            alert("Login fehlgeschlagen!");
+        }
+    }
+
+    async function logout() {
+        localStorage.removeItem("token");
+        alert("Erfolgreich ausgeloggt!");
+    }
+</script>
+</body>
+</html>

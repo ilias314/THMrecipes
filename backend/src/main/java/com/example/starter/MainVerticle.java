@@ -21,6 +21,9 @@ import io.vertx.ext.auth.JWTOptions;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +66,18 @@ public class MainVerticle extends AbstractVerticle {
     // 📌 Router & CRUD-Routen
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
+
+    router.route().handler(CorsHandler.create("*")
+      .allowedMethod(HttpMethod.GET)
+      .allowedMethod(HttpMethod.POST)
+      .allowedMethod(HttpMethod.PUT)
+      .allowedMethod(HttpMethod.DELETE)
+      .allowedHeader("Content-Type")
+      .allowedHeader("Authorization"));
+
+    router.route("/*").handler(StaticHandler.create("frontend"));
+
+    router.route("/protected-route").handler(JWTAuthHandler.create(jwtProvider));
 
     // Auth-Routen
     router.post("/register").handler(this::register);
@@ -110,8 +125,7 @@ public class MainVerticle extends AbstractVerticle {
     router.delete("/comments/:id").handler(this::deleteComment);
     router.get("/users/:userId/comments").handler(this::getUserComments);
 
-
-    vertx.createHttpServer().requestHandler(router).listen(8888, http -> {
+    vertx.createHttpServer().requestHandler(router).listen(8080, http -> {
       if (http.succeeded()) {
         startPromise.complete();
         System.out.println("✅ HTTP-Server läuft auf Port 8080");
@@ -207,13 +221,29 @@ public class MainVerticle extends AbstractVerticle {
   // 📌 UPDATE: Benutzer aktualisieren
   private void updateUser(RoutingContext context) {
     String id = context.pathParam("id");
-    Integer userIdFromToken = context.user().principal().getInteger("userId");
 
+    // Check if the user is authenticated
+    if (context.user() == null) {
+      context.response().setStatusCode(401).end("Unauthorized: User not authenticated.");
+      return;
+    }
+
+    // Safely retrieve the user ID from the principal
+    JsonObject principal = context.user().principal();
+    if (principal == null || !principal.containsKey("userId")) {
+      context.response().setStatusCode(401).end("Unauthorized: User principal is invalid.");
+      return;
+    }
+
+    Integer userIdFromToken = principal.getInteger("userId");
+
+    // Check if user is authorized to perform the action
     if (!userIdFromToken.equals(Integer.parseInt(id))) {
       context.response().setStatusCode(403).end("Forbidden: You can only update your own profile.");
       return;
     }
 
+    // Validate request body
     JsonObject body = context.getBodyAsJson();
     if (body == null || !body.containsKey("username") || !body.containsKey("email") || !body.containsKey("password")) {
       context.response().setStatusCode(400).end("❌ Fehlende Daten");
@@ -232,6 +262,7 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
 
+    // Execute the database query
     String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
     client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), body.getString("password"), Integer.parseInt(id)), ar -> {
       if (ar.succeeded() && ar.result().rowCount() > 0) {
@@ -349,15 +380,18 @@ public class MainVerticle extends AbstractVerticle {
           String token = jwtProvider.generateToken(new JsonObject().put("userId", row.getInteger("id")),
             new JWTOptions().setExpiresInMinutes(60));
 
-          context.response().putHeader("content-type", "application/json").end(new JsonObject().put("token", token).encode());
+          context.response()
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("token", token).put("userId", row.getInteger("id")).encode());
         } else {
-          context.response().setStatusCode(401).end("Ungültige Anmeldeinformationen.");
+          context.response().setStatusCode(401).end("{\"message\": \"Falsche Zugangsdaten\"}");
         }
       } else {
-        context.response().setStatusCode(401).end("Benutzer nicht gefunden.");
+        context.response().setStatusCode(401).end("{\"message\": \"Benutzer nicht gefunden\"}");
       }
     });
   }
+
 
   // ✅ Benutzer-Logout (nur Token löschen)
   private void logout(RoutingContext context) {
@@ -1255,5 +1289,6 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
 
 }

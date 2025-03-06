@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil bearbeiten</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav>
+    <a href="home.html">🏠 Zurück zum Dashboard</a>
+</nav>
+
+<h2>Profil bearbeiten</h2>
+<form onsubmit="event.preventDefault(); updateProfile();">
+    <label for="username">Benutzername:</label>
+    <input type="text" id="username" required>
+
+    <label for="email">E-Mail:</label>
+    <input type="email" id="email" required>
+
+    <label for="password">Neues Passwort:</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">Speichern</button>
+</form>
+
+<script src="profile.js"></script>
+</body>
+</html>
