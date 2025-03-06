@@ -1,30 +1,31 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil bearbeiten</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Recipe App</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<nav>
-    <a href="home.html">🏠 Zurück zum Dashboard</a>
-</nav>
-
-<h2>Profil bearbeiten</h2>
-<form onsubmit="event.preventDefault(); updateProfile();">
-    <label for="username">Benutzername:</label>
-    <input type="text" id="username" required>
-
-    <label for="email">E-Mail:</label>
-    <input type="email" id="email" required>
-
-    <label for="password">Neues Passwort:</label>
-    <input type="password" id="password" required>
-
-    <button type="submit">Speichern</button>
-</form>
-
+<header>
+  <h1>Recipe App</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="recipes.html">Recipes</a>
+    <a href="logout">Logout</a>
+  </nav>
+</header>
+<main>
+  <h2>Profile</h2>
+  <div id="profileInfo"></div>
+  <h3>Your Recipes</h3>
+  <div id="userRecipes"></div>
+  <h3>Your Comments</h3>
+  <div id="userComments"></div>
+  <h3>Your Ratings</h3>
+  <div id="userRatings"></div>
+</main>
+<script src="shared.js"></script> <!-- Include shared.js -->
 <script src="profile.js"></script>
 </body>
 </html>

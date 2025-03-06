@@ -688,80 +688,56 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
   private void addRating(RoutingContext context) {
-    // Get authenticated user ID
-    Integer userId = context.user().principal().getInteger("userId");
-    String recipeId = context.pathParam("recipeId");
     JsonObject body = context.getBodyAsJson();
 
-    // Validate input
-    if (body == null || !body.containsKey("rating")) {
+    // Safely parse the rating value
+    Integer ratingValue;
+    try {
+      ratingValue = body.getInteger("rating"); // Try to get as integer
+      if (ratingValue == null) {
+        // If not an integer, try to parse as string
+        String ratingStr = body.getString("rating");
+        if (ratingStr != null) {
+          ratingValue = Integer.parseInt(ratingStr);
+        } else {
+          context.response()
+            .setStatusCode(400)
+            .end(new JsonObject().put("message", "Rating value is required").encode());
+          return;
+        }
+      }
+    } catch (NumberFormatException e) {
       context.response()
         .setStatusCode(400)
-        .end(new JsonObject().put("message", "Rating value is required").encode());
+        .end(new JsonObject().put("message", "Invalid rating format. Rating must be a number.").encode());
       return;
     }
 
-    Integer ratingValue = body.getInteger("rating");
-    // Validate rating value (1-5)
-    if (ratingValue == null || ratingValue < 1 || ratingValue > 5) {
+    // Validate the rating value (1-5)
+    if (ratingValue < 1 || ratingValue > 5) {
       context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Rating must be between 1 and 5").encode());
       return;
     }
 
-    // Check if recipe exists
-    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
-      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
-        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
-          // Check if user has already rated this recipe
-          client.preparedQuery("SELECT id FROM ratings WHERE user_id = ? AND recipe_id = ?")
-            .execute(Tuple.of(userId, Integer.parseInt(recipeId)), existingRating -> {
-              if (existingRating.succeeded() && existingRating.result().size() > 0) {
-                // User has already rated this recipe
-                context.response()
-                  .setStatusCode(409)
-                  .end(new JsonObject().put("message", "You have already rated this recipe. Use PUT to update.").encode());
-              } else {
-                // Insert new rating
-                client.preparedQuery("INSERT INTO ratings (user_id, recipe_id, rating) VALUES (?, ?, ?)")
-                  .execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue), ar -> {
-                    if (ar.succeeded()) {
-                      // Get the new rating ID
-                      client.preparedQuery("SELECT LAST_INSERT_ID() as id")
-                        .execute(idResult -> {
-                          if (idResult.succeeded() && idResult.result().size() > 0) {
-                            Integer newId = idResult.result().iterator().next().getInteger("id");
-                            Ratings rating = new Ratings();
-                            rating.setId(newId);
-                            rating.setUserId(userId);
-                            rating.setRecipeId(Integer.parseInt(recipeId));
-                            rating.setRating(ratingValue);
+    // Get the authenticated user ID
+    Integer userId = context.user().principal().getInteger("userId");
+    String recipeId = context.pathParam("recipeId");
 
-                            context.response()
-                              .setStatusCode(201)
-                              .putHeader("content-type", "application/json")
-                              .end(Json.encodePrettily(rating));
-                          } else {
-                            context.response()
-                              .setStatusCode(500)
-                              .end(new JsonObject().put("message", "Failed to retrieve new rating ID").encode());
-                          }
-                        });
-                    } else {
-                      context.response()
-                        .setStatusCode(500)
-                        .end(new JsonObject().put("message", "Failed to add rating: " + ar.cause().getMessage()).encode());
-                    }
-                  });
-              }
-            });
-        } else {
-          context.response()
-            .setStatusCode(404)
-            .end(new JsonObject().put("message", "Recipe not found").encode());
-        }
-      });
+    // Insert the rating into the database
+    String sql = "INSERT INTO ratings (user_id, recipe_id, rating) VALUES (?, ?, ?)";
+    client.preparedQuery(sql).execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue), ar -> {
+      if (ar.succeeded()) {
+        context.response()
+          .setStatusCode(201)
+          .end(new JsonObject().put("message", "Rating added successfully").encode());
+      } else {
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Failed to add rating: " + ar.cause().getMessage()).encode());
+      }
+    });
   }
   private void getRecipeRatings(RoutingContext context) {
     String recipeId = context.pathParam("recipeId");

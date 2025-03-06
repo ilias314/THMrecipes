@@ -1,62 +1,166 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
-
-    if (!userId || !token) {
-        alert("❌ Nicht eingeloggt!");
-        window.location.href = "login.html";
-        return;
-    }
-
-    try {
-        const response = await fetch(`http://localhost:8080/users/${userId}`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        if (!response.ok) throw new Error("Fehler beim Laden der Benutzerinformationen");
-
-        const userData = await response.json();
-        document.getElementById("username").value = userData.username;
-        document.getElementById("email").value = userData.email;
-
-    } catch (error) {
-        console.error("❌ Fehler:", error);
-    }
-});
-
-// ✅ Update-Funktion für den "Speichern"-Button
-async function updateProfile() {
-  const userId = localStorage.getItem("userId");
+// Function to fetch user profile
+async function fetchProfile() {
   const token = localStorage.getItem("token");
 
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  // Check if the user is logged in
+  if (!token) {
+    alert("Bitte zuerst einloggen!");
+    window.location.href = "login.html";
+    return;
+  }
 
-  if (!username || !email || !password) {
-    alert("❌ Alle Felder müssen ausgefüllt sein!");
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Benutzer-ID fehlt!");
     return;
   }
 
   try {
-    const response = await fetch(`http://localhost:8080/users/${userId}`, {
-      method: "PUT",
+    // Fetch user profile from the backend
+    const profileResponse = await fetch(`http://localhost:8080/users/${userId}`, {
+      method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ username, email, password })
+      }
     });
 
-    if (!response.ok) throw new Error("❌ Fehler beim Aktualisieren des Profils!");
+    // Check if the response is successful
+    if (profileResponse.ok) {
+      const user = await profileResponse.json();
+      displayProfile(user);
+    } else {
+      const errorData = await profileResponse.json();
+      throw new Error(errorData.message || "Fehler beim Abrufen des Profils.");
+    }
 
-    alert("✅ Profil erfolgreich aktualisiert!");
+    // Fetch user recipes
+    const recipesResponse = await fetch(`http://localhost:8080/users/${userId}/recipes`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (recipesResponse.ok) {
+      const recipes = await recipesResponse.json();
+      displayUserRecipes(recipes);
+    } else {
+      throw new Error("Fehler beim Abrufen der Benutzerrezepte.");
+    }
+
+    // Fetch user comments
+    const commentsResponse = await fetch(`http://localhost:8080/users/${userId}/comments`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (commentsResponse.ok) {
+      const comments = await commentsResponse.json();
+      displayUserComments(comments);
+    } else {
+      throw new Error("Fehler beim Abrufen der Benutzerkommentare.");
+    }
+
+    // Fetch user ratings
+    const ratingsResponse = await fetch(`http://localhost:8080/users/${userId}/ratings`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (ratingsResponse.ok) {
+      const ratings = await ratingsResponse.json();
+      displayUserRatings(ratings);
+    } else {
+      throw new Error("Fehler beim Abrufen der Benutzerbewertungen.");
+    }
   } catch (error) {
-    console.error("❌ Fehler beim Aktualisieren:", error);
+    console.error("❌ Fehler:", error);
+    alert(error.message);
   }
 }
 
+// Function to display user profile
+function displayProfile(user) {
+  const profileInfo = document.getElementById("profileInfo");
+
+  // Clear the profile info before adding new data
+  profileInfo.innerHTML = "";
+
+  // Add user profile data
+  profileInfo.innerHTML = `
+    <p>Username: ${user.username}</p>
+    <p>Email: ${user.email}</p>
+  `;
+}
+
+// Function to display user recipes
+function displayUserRecipes(recipes) {
+  const userRecipes = document.getElementById("userRecipes");
+
+  // Clear the list before adding new recipes
+  userRecipes.innerHTML = "";
+
+  // Add each recipe to the list
+  recipes.forEach(recipe => {
+    const recipeDiv = document.createElement("div");
+    recipeDiv.className = "recipe";
+    recipeDiv.innerHTML = `
+      <h3>${recipe.title}</h3>
+      <p>${recipe.description}</p>
+      <a href="recipe-detail.html?id=${recipe.id}">View Recipe</a>
+    `;
+    userRecipes.appendChild(recipeDiv);
+  });
+}
+
+// Function to display user comments
+function displayUserComments(comments) {
+  const userComments = document.getElementById("userComments");
+
+  // Clear the list before adding new comments
+  userComments.innerHTML = "";
+
+  // Add each comment to the list
+  comments.forEach(comment => {
+    const commentDiv = document.createElement("div");
+    commentDiv.className = "comment";
+    commentDiv.innerHTML = `
+      <h3>${comment.recipeTitle}</h3>
+      <p>${comment.content}</p>
+      <p>${comment.createdAt}</p>
+    `;
+    userComments.appendChild(commentDiv);
+  });
+}
+
+// Function to display user ratings
+function displayUserRatings(ratings) {
+  const userRatings = document.getElementById("userRatings");
+
+  // Clear the list before adding new ratings
+  userRatings.innerHTML = "";
+
+  // Add each rating to the list
+  ratings.forEach(rating => {
+    const ratingDiv = document.createElement("div");
+    ratingDiv.className = "rating";
+    ratingDiv.innerHTML = `
+      <h3>${rating.recipeTitle}</h3>
+      <p>Rating: ${rating.rating}</p>
+      <p>${rating.createdAt}</p>
+    `;
+    userRatings.appendChild(ratingDiv);
+  });
+}
+
+// Fetch profile, recipes, comments, and ratings when the page loads
+document.addEventListener("DOMContentLoaded", fetchProfile);
