@@ -89,6 +89,27 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/users/:userId/recipes").handler(this::getRecipesByUserId);
     router.get("/recipe/search").handler(this::searchRecipes);
 
+    // Add these routes to your start method
+
+    router.route("/comments*").handler(jwtAuthHandler);
+    router.route("/ratings*").handler(jwtAuthHandler);
+
+// Rating routes
+    router.post("/recipes/:recipeId/ratings").handler(this::addRating);
+    router.get("/recipes/:recipeId/ratings").handler(this::getRecipeRatings);
+    router.get("/ratings/:id").handler(this::getRatingById);
+    router.put("/ratings/:id").handler(this::updateRating);
+    router.delete("/ratings/:id").handler(this::deleteRating);
+    router.get("/users/:userId/ratings").handler(this::getUserRatings);
+
+// Comment routes
+    router.post("/recipes/:recipeId/comments").handler(this::addComment);
+    router.get("/recipes/:recipeId/comments").handler(this::getRecipeComments);
+    router.get("/comments/:id").handler(this::getCommentById);
+    router.put("/comments/:id").handler(this::updateComment);
+    router.delete("/comments/:id").handler(this::deleteComment);
+    router.get("/users/:userId/comments").handler(this::getUserComments);
+
 
     vertx.createHttpServer().requestHandler(router).listen(8888, http -> {
       if (http.succeeded()) {
@@ -632,4 +653,607 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+  private void addRating(RoutingContext context) {
+    // Get authenticated user ID
+    Integer userId = context.user().principal().getInteger("userId");
+    String recipeId = context.pathParam("recipeId");
+    JsonObject body = context.getBodyAsJson();
+
+    // Validate input
+    if (body == null || !body.containsKey("rating")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Rating value is required").encode());
+      return;
+    }
+
+    Integer ratingValue = body.getInteger("rating");
+    // Validate rating value (1-5)
+    if (ratingValue == null || ratingValue < 1 || ratingValue > 5) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Rating must be between 1 and 5").encode());
+      return;
+    }
+
+    // Check if recipe exists
+    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
+        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
+          // Check if user has already rated this recipe
+          client.preparedQuery("SELECT id FROM ratings WHERE user_id = ? AND recipe_id = ?")
+            .execute(Tuple.of(userId, Integer.parseInt(recipeId)), existingRating -> {
+              if (existingRating.succeeded() && existingRating.result().size() > 0) {
+                // User has already rated this recipe
+                context.response()
+                  .setStatusCode(409)
+                  .end(new JsonObject().put("message", "You have already rated this recipe. Use PUT to update.").encode());
+              } else {
+                // Insert new rating
+                client.preparedQuery("INSERT INTO ratings (user_id, recipe_id, rating) VALUES (?, ?, ?)")
+                  .execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue), ar -> {
+                    if (ar.succeeded()) {
+                      // Get the new rating ID
+                      client.preparedQuery("SELECT LAST_INSERT_ID() as id")
+                        .execute(idResult -> {
+                          if (idResult.succeeded() && idResult.result().size() > 0) {
+                            Integer newId = idResult.result().iterator().next().getInteger("id");
+                            Ratings rating = new Ratings();
+                            rating.setId(newId);
+                            rating.setUserId(userId);
+                            rating.setRecipeId(Integer.parseInt(recipeId));
+                            rating.setRating(ratingValue);
+
+                            context.response()
+                              .setStatusCode(201)
+                              .putHeader("content-type", "application/json")
+                              .end(Json.encodePrettily(rating));
+                          } else {
+                            context.response()
+                              .setStatusCode(500)
+                              .end(new JsonObject().put("message", "Failed to retrieve new rating ID").encode());
+                          }
+                        });
+                    } else {
+                      context.response()
+                        .setStatusCode(500)
+                        .end(new JsonObject().put("message", "Failed to add rating: " + ar.cause().getMessage()).encode());
+                    }
+                  });
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Recipe not found").encode());
+        }
+      });
+  }
+  private void getRecipeRatings(RoutingContext context) {
+    String recipeId = context.pathParam("recipeId");
+
+    // Check if recipe exists
+    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
+        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
+          client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.recipe_id = ?")
+            .execute(Tuple.of(Integer.parseInt(recipeId)), ar -> {
+              if (ar.succeeded()) {
+                List<JsonObject> ratings = new ArrayList<>();
+                ar.result().forEach(row -> {
+                  JsonObject rating = new JsonObject()
+                    .put("id", row.getInteger("id"))
+                    .put("userId", row.getInteger("user_id"))
+                    .put("recipeId", row.getInteger("recipe_id"))
+                    .put("rating", row.getInteger("rating"))
+                    .put("createdAt", row.getLocalDateTime("created_at").toString())
+                    .put("username", row.getString("username"));
+                  ratings.add(rating);
+                });
+
+                // Calculate average rating
+                double averageRating = ratings.stream()
+                  .mapToInt(r -> r.getInteger("rating"))
+                  .average()
+                  .orElse(0.0);
+
+                JsonObject response = new JsonObject()
+                  .put("ratings", new JsonArray(ratings))
+                  .put("averageRating", averageRating)
+                  .put("count", ratings.size());
+
+                context.response()
+                  .putHeader("content-type", "application/json")
+                  .end(response.encode());
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to get ratings: " + ar.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Recipe not found").encode());
+        }
+      });
+  }
+  private void getRatingById(RoutingContext context) {
+    String id = context.pathParam("id");
+
+    client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.id = ?")
+      .execute(Tuple.of(Integer.parseInt(id)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Row row = ar.result().iterator().next();
+          JsonObject rating = new JsonObject()
+            .put("id", row.getInteger("id"))
+            .put("userId", row.getInteger("user_id"))
+            .put("recipeId", row.getInteger("recipe_id"))
+            .put("rating", row.getInteger("rating"))
+            .put("createdAt", row.getLocalDateTime("created_at").toString())
+            .put("username", row.getString("username"));
+
+          context.response()
+            .putHeader("content-type", "application/json")
+            .end(rating.encode());
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Rating not found").encode());
+        }
+      });
+  }
+  private void updateRating(RoutingContext context) {
+    String id = context.pathParam("id");
+    Integer userId = context.user().principal().getInteger("userId");
+    JsonObject body = context.getBodyAsJson();
+
+    if (body == null || !body.containsKey("rating")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Rating value is required").encode());
+      return;
+    }
+
+    Integer ratingValue = body.getInteger("rating");
+    if (ratingValue == null || ratingValue < 1 || ratingValue > 5) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Rating must be between 1 and 5").encode());
+      return;
+    }
+
+    // Check if rating exists and user is the owner
+    client.preparedQuery("SELECT user_id FROM ratings WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(id)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Integer ratingUserId = ar.result().iterator().next().getInteger("user_id");
+
+          if (!userId.equals(ratingUserId)) {
+            context.response()
+              .setStatusCode(403)
+              .end(new JsonObject().put("message", "You can only update your own ratings").encode());
+            return;
+          }
+
+          // Update the rating
+          client.preparedQuery("UPDATE ratings SET rating = ? WHERE id = ?")
+            .execute(Tuple.of(ratingValue, Integer.parseInt(id)), updateResult -> {
+              if (updateResult.succeeded()) {
+                client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.id = ?")
+                  .execute(Tuple.of(Integer.parseInt(id)), getResult -> {
+                    if (getResult.succeeded() && getResult.result().size() > 0) {
+                      Row row = getResult.result().iterator().next();
+                      JsonObject rating = new JsonObject()
+                        .put("id", row.getInteger("id"))
+                        .put("userId", row.getInteger("user_id"))
+                        .put("recipeId", row.getInteger("recipe_id"))
+                        .put("rating", row.getInteger("rating"))
+                        .put("createdAt", row.getLocalDateTime("created_at").toString())
+                        .put("username", row.getString("username"));
+
+                      context.response()
+                        .putHeader("content-type", "application/json")
+                        .end(rating.encode());
+                    } else {
+                      context.response()
+                        .setStatusCode(500)
+                        .end(new JsonObject().put("message", "Failed to retrieve updated rating").encode());
+                    }
+                  });
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to update rating: " + updateResult.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Rating not found").encode());
+        }
+      });
+  }
+  private void deleteRating(RoutingContext context) {
+    String id = context.pathParam("id");
+    Integer userId = context.user().principal().getInteger("userId");
+
+    // Check if rating exists and user is the owner
+    client.preparedQuery("SELECT user_id FROM ratings WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(id)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Integer ratingUserId = ar.result().iterator().next().getInteger("user_id");
+
+          if (!userId.equals(ratingUserId)) {
+            context.response()
+              .setStatusCode(403)
+              .end(new JsonObject().put("message", "You can only delete your own ratings").encode());
+            return;
+          }
+
+          // Delete the rating
+          client.preparedQuery("DELETE FROM ratings WHERE id = ?")
+            .execute(Tuple.of(Integer.parseInt(id)), deleteResult -> {
+              if (deleteResult.succeeded()) {
+                context.response()
+                  .setStatusCode(200)
+                  .end(new JsonObject().put("message", "Rating deleted successfully").encode());
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to delete rating: " + deleteResult.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Rating not found").encode());
+        }
+      });
+  }
+  private void getUserRatings(RoutingContext context) {
+    String userId = context.pathParam("userId");
+
+    // Check if user exists
+    client.preparedQuery("SELECT id FROM users WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
+        if (userCheck.succeeded() && userCheck.result().size() > 0) {
+          client.preparedQuery("SELECT r.*, rec.title as recipe_title FROM ratings r JOIN recipes rec ON r.recipe_id = rec.id WHERE r.user_id = ?")
+            .execute(Tuple.of(Integer.parseInt(userId)), ar -> {
+              if (ar.succeeded()) {
+                List<JsonObject> ratings = new ArrayList<>();
+                ar.result().forEach(row -> {
+                  JsonObject rating = new JsonObject()
+                    .put("id", row.getInteger("id"))
+                    .put("userId", row.getInteger("user_id"))
+                    .put("recipeId", row.getInteger("recipe_id"))
+                    .put("recipeTitle", row.getString("recipe_title"))
+                    .put("rating", row.getInteger("rating"))
+                    .put("createdAt", row.getLocalDateTime("created_at").toString());
+                  ratings.add(rating);
+                });
+
+                context.response()
+                  .putHeader("content-type", "application/json")
+                  .end(new JsonArray(ratings).encode());
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to get user ratings: " + ar.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "User not found").encode());
+        }
+      });
+  }
+  private void addComment(RoutingContext context) {
+    Integer userId = context.user().principal().getInteger("userId");
+    String recipeId = context.pathParam("recipeId");
+    JsonObject body = context.getBodyAsJson();
+
+    // Validate input
+    if (body == null || !body.containsKey("content")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Comment content is required").encode());
+      return;
+    }
+
+    String content = body.getString("content");
+    if (content == null || content.trim().isEmpty()) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Comment content cannot be empty").encode());
+      return;
+    }
+
+    // Check if recipe exists
+    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
+        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
+          // Insert new comment
+          client.preparedQuery("INSERT INTO comments (user_id, recipe_id, content) VALUES (?, ?, ?)")
+            .execute(Tuple.of(userId, Integer.parseInt(recipeId), content), ar -> {
+              if (ar.succeeded()) {
+                // Get the new comment ID
+                client.preparedQuery("SELECT LAST_INSERT_ID() as id")
+                  .execute(idResult -> {
+                    if (idResult.succeeded() && idResult.result().size() > 0) {
+                      Integer newId = idResult.result().iterator().next().getInteger("id");
+
+                      // Get the username for display
+                      client.preparedQuery("SELECT username FROM users WHERE id = ?")
+                        .execute(Tuple.of(userId), userResult -> {
+                          if (userResult.succeeded() && userResult.result().size() > 0) {
+                            String username = userResult.result().iterator().next().getString("username");
+
+                            Comments comment = new Comments();
+                            comment.setId(newId);
+                            comment.setUserId(userId);
+                            comment.setRecipeId(Integer.parseInt(recipeId));
+                            comment.setContent(content);
+                            comment.setUsername(username);
+
+                            context.response()
+                              .setStatusCode(201)
+                              .putHeader("content-type", "application/json")
+                              .end(Json.encodePrettily(comment));
+                          } else {
+                            context.response()
+                              .setStatusCode(500)
+                              .end(new JsonObject().put("message", "Failed to retrieve username").encode());
+                          }
+                        });
+                    } else {
+                      context.response()
+                        .setStatusCode(500)
+                        .end(new JsonObject().put("message", "Failed to retrieve new comment ID").encode());
+                    }
+                  });
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to add comment: " + ar.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Recipe not found").encode());
+        }
+      });
+  }
+  private void getRecipeComments(RoutingContext context) {
+    String recipeId = context.pathParam("recipeId");
+
+    // Check if recipe exists
+    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
+        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
+          client.preparedQuery("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.recipe_id = ? ORDER BY c.created_at DESC")
+            .execute(Tuple.of(Integer.parseInt(recipeId)), ar -> {
+              if (ar.succeeded()) {
+                List<JsonObject> comments = new ArrayList<>();
+                ar.result().forEach(row -> {
+                  JsonObject comment = new JsonObject()
+                    .put("id", row.getInteger("id"))
+                    .put("userId", row.getInteger("user_id"))
+                    .put("recipeId", row.getInteger("recipe_id"))
+                    .put("content", row.getString("content"))
+                    .put("createdAt", row.getLocalDateTime("created_at").toString())
+                    .put("updatedAt", row.getLocalDateTime("updated_at").toString())
+                    .put("username", row.getString("username"));
+                  comments.add(comment);
+                });
+
+                context.response()
+                  .putHeader("content-type", "application/json")
+                  .end(new JsonArray(comments).encode());
+              } else {
+                context.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject().put("message", "Failed to get comments: " + ar.cause().getMessage()).encode());
+              }
+            });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Recipe not found").encode());
+        }
+      });
+  }
+  private void getCommentById(RoutingContext context) {
+    String id = context.pathParam("id");
+
+    client.preparedQuery("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?")
+      .execute(Tuple.of(Integer.parseInt(id)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Row row = ar.result().iterator().next();
+          JsonObject comment = new JsonObject()
+            .put("id", row.getInteger("id"))
+            .put("userId", row.getInteger("user_id"))
+            .put("recipeId", row.getInteger("recipe_id"))
+            .put("content", row.getString("content"))
+            .put("createdAt", row.getLocalDateTime("created_at").toString())
+            .put("updatedAt", row.getLocalDateTime("updated_at").toString())
+            .put("username", row.getString("username"));
+
+          context.response()
+            .putHeader("content-type", "application/json")
+            .end(comment.encode());
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Comment not found").encode());
+        }
+      });
+  }
+  private void updateComment(RoutingContext context) {
+    String commentId = context.pathParam("id");
+    Integer userId = context.user().principal().getInteger("userId");
+    JsonObject body = context.getBodyAsJson();
+
+    // Validate input
+    if (body == null || !body.containsKey("content")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Comment content is required").encode());
+      return;
+    }
+
+    String content = body.getString("content");
+    if (content == null || content.trim().isEmpty()) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Comment content cannot be empty").encode());
+      return;
+    }
+
+    // Check if the comment exists and belongs to the user
+    client.preparedQuery("SELECT user_id FROM comments WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(commentId)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Integer commentUserId = ar.result().iterator().next().getInteger("user_id");
+
+          if (!userId.equals(commentUserId)) {
+            context.response()
+              .setStatusCode(403)
+              .end(new JsonObject().put("message", "You can only update your own comments").encode());
+            return;
+          }
+
+          // Update the comment
+          String sql = "UPDATE comments SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+          client.preparedQuery(sql).execute(Tuple.of(content, Integer.parseInt(commentId)), updateResult -> {
+            if (updateResult.succeeded()) {
+              // Fetch the updated comment
+              client.preparedQuery("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?")
+                .execute(Tuple.of(Integer.parseInt(commentId)), fetchResult -> {
+                  if (fetchResult.succeeded() && fetchResult.result().size() > 0) {
+                    Row row = fetchResult.result().iterator().next();
+                    JsonObject comment = new JsonObject()
+                      .put("id", row.getInteger("id"))
+                      .put("userId", row.getInteger("user_id"))
+                      .put("recipeId", row.getInteger("recipe_id"))
+                      .put("content", row.getString("content"))
+                      .put("createdAt", row.getLocalDateTime("created_at").toString())
+                      .put("updatedAt", row.getLocalDateTime("updated_at").toString())
+                      .put("username", row.getString("username"));
+
+                    context.response()
+                      .setStatusCode(200)
+                      .putHeader("content-type", "application/json")
+                      .end(comment.encode());
+                  } else {
+                    context.response()
+                      .setStatusCode(500)
+                      .end(new JsonObject().put("message", "Failed to fetch updated comment").encode());
+                  }
+                });
+            } else {
+              context.response()
+                .setStatusCode(500)
+                .end(new JsonObject().put("message", "Failed to update comment: " + updateResult.cause().getMessage()).encode());
+            }
+          });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Comment not found").encode());
+        }
+      });
+  }
+  private void deleteComment(RoutingContext context) {
+    String commentId = context.pathParam("id");
+    Integer userId = context.user().principal().getInteger("userId");
+
+    // Check if the comment exists and belongs to the user
+    client.preparedQuery("SELECT user_id FROM comments WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(commentId)), ar -> {
+        if (ar.succeeded() && ar.result().size() > 0) {
+          Integer commentUserId = ar.result().iterator().next().getInteger("user_id");
+
+          if (!userId.equals(commentUserId)) {
+            context.response()
+              .setStatusCode(403)
+              .end(new JsonObject().put("message", "You can only delete your own comments").encode());
+            return;
+          }
+
+          // Delete the comment
+          String sql = "DELETE FROM comments WHERE id = ?";
+          client.preparedQuery(sql).execute(Tuple.of(Integer.parseInt(commentId)), deleteResult -> {
+            if (deleteResult.succeeded()) {
+              context.response()
+                .setStatusCode(200)
+                .end(new JsonObject().put("message", "Comment deleted successfully").encode());
+            } else {
+              context.response()
+                .setStatusCode(500)
+                .end(new JsonObject().put("message", "Failed to delete comment: " + deleteResult.cause().getMessage()).encode());
+            }
+          });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "Comment not found").encode());
+        }
+      });
+  }
+  private void getUserComments(RoutingContext context) {
+    String userId = context.pathParam("userId");
+
+    // Validate the user ID
+    try {
+      int id = Integer.parseInt(userId);
+    } catch (NumberFormatException e) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Invalid user ID: must be a number").encode());
+      return;
+    }
+
+    // Check if the user exists
+    client.preparedQuery("SELECT id FROM users WHERE id = ?")
+      .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
+        if (userCheck.succeeded() && userCheck.result().size() > 0) {
+          // Fetch all comments by the user
+          String sql = "SELECT c.*, r.title AS recipe_title FROM comments c JOIN recipes r ON c.recipe_id = r.id WHERE c.user_id = ? ORDER BY c.created_at DESC";
+          client.preparedQuery(sql).execute(Tuple.of(Integer.parseInt(userId)), ar -> {
+            if (ar.succeeded()) {
+              List<JsonObject> comments = new ArrayList<>();
+              ar.result().forEach(row -> {
+                JsonObject comment = new JsonObject()
+                  .put("id", row.getInteger("id"))
+                  .put("userId", row.getInteger("user_id"))
+                  .put("recipeId", row.getInteger("recipe_id"))
+                  .put("recipeTitle", row.getString("recipe_title"))
+                  .put("content", row.getString("content"))
+                  .put("createdAt", row.getLocalDateTime("created_at").toString())
+                  .put("updatedAt", row.getLocalDateTime("updated_at").toString());
+
+                comments.add(comment);
+              });
+
+              context.response()
+                .setStatusCode(200)
+                .putHeader("content-type", "application/json")
+                .end(new JsonArray(comments).encode());
+            } else {
+              context.response()
+                .setStatusCode(500)
+                .end(new JsonObject().put("message", "Failed to fetch user comments: " + ar.cause().getMessage()).encode());
+            }
+          });
+        } else {
+          context.response()
+            .setStatusCode(404)
+            .end(new JsonObject().put("message", "User not found").encode());
+        }
+      });
+  }
+
 }
