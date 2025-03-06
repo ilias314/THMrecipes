@@ -82,10 +82,13 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/recipes").handler(this::addRecipe);
     router.get("/recipes").handler(this::getAllRecipes);
     router.get("/recipes/:id").handler(this::getRecipesById);
+
     router.put("/recipes/:id").handler(this::updateRecipe);
     router.delete("/recipes/:id").handler(this::deleteRecipe);
 
     router.get("/users/:userId/recipes").handler(this::getRecipesByUserId);
+    router.get("/recipe/search").handler(this::searchRecipes);
+
 
     vertx.createHttpServer().requestHandler(router).listen(8888, http -> {
       if (http.succeeded()) {
@@ -183,11 +186,31 @@ public class MainVerticle extends AbstractVerticle {
   // 📌 UPDATE: Benutzer aktualisieren
   private void updateUser(RoutingContext context) {
     String id = context.pathParam("id");
+    Integer userIdFromToken = context.user().principal().getInteger("userId");
+
+    if (!userIdFromToken.equals(Integer.parseInt(id))) {
+      context.response().setStatusCode(403).end("Forbidden: You can only update your own profile.");
+      return;
+    }
+
     JsonObject body = context.getBodyAsJson();
     if (body == null || !body.containsKey("username") || !body.containsKey("email") || !body.containsKey("password")) {
       context.response().setStatusCode(400).end("❌ Fehlende Daten");
       return;
     }
+
+    // Validate email format
+    if (!isValidEmail(body.getString("email"))) {
+      context.response().setStatusCode(400).end("Invalid email format.");
+      return;
+    }
+
+    // Validate password strength
+    if (!isValidPassword(body.getString("password"))) {
+      context.response().setStatusCode(400).end("Password must contain at least one uppercase letter and two digits.");
+      return;
+    }
+
     String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
     client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), body.getString("password"), Integer.parseInt(id)), ar -> {
       if (ar.succeeded() && ar.result().rowCount() > 0) {
@@ -199,15 +222,74 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
+  private boolean isValidEmail(String email) {
+    return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+  }
+
   // 📌 DELETE: Benutzer löschen
   private void deleteUser(RoutingContext context) {
     String id = context.pathParam("id");
-    client.preparedQuery("DELETE FROM users WHERE id = ?").execute(Tuple.of(Integer.parseInt(id)), ar -> {
-      if (ar.succeeded() && ar.result().rowCount() > 0) {
-        context.response().setStatusCode(204).end();
+    Integer userIdFromToken = context.user().principal().getInteger("userId");
+
+    // Check if the logged-in user is trying to delete their own account
+    if (!userIdFromToken.equals(Integer.parseInt(id))) {
+      context.response().setStatusCode(403).end("Forbidden: You can only delete your own account.");
+      return;
+    }
+
+    // SQL queries to delete recipes and user
+    String deleteRecipesQuery = "DELETE FROM recipes WHERE user_id = ?";
+    String deleteUserQuery = "DELETE FROM users WHERE id = ?";
+
+    // Get a connection from the pool
+    client.getConnection(conn -> {
+      if (conn.succeeded()) {
+        SqlConnection connection = conn.result();
+
+        // Begin a transaction
+        connection.begin(tx -> {
+          if (tx.succeeded()) {
+            // First, delete all recipes associated with the user
+            connection.preparedQuery(deleteRecipesQuery).execute(Tuple.of(Integer.parseInt(id)), ar -> {
+              if (ar.succeeded()) {
+              if (ar.succeeded())
+                // If recipes are deleted successfully, delete the user
+                connection.preparedQuery(deleteUserQuery).execute(Tuple.of(Integer.parseInt(id)), ar2 -> {
+                  if (ar2.succeeded()) {
+                    // Commit the transaction if both deletions succeed
+                    tx.result().commit(commit -> {
+                      if (commit.succeeded()) {
+                        context.response().setStatusCode(204).end(); // 204 No Content
+                      } else {
+                        // Rollback if commit fails
+                        tx.result().rollback();
+                        context.response().setStatusCode(500).end("Failed to commit transaction.");
+                      }
+                      connection.close(); // Always close the connection
+                    });
+                  } else {
+                    // Rollback if user deletion fails
+                    tx.result().rollback();
+                    context.response().setStatusCode(500).end("Failed to delete user.");
+                    connection.close(); // Always close the connection
+                  }
+                });
+              } else {
+                // Rollback if recipe deletion fails
+                tx.result().rollback();
+                context.response().setStatusCode(500).end("Failed to delete associated recipes.");
+                connection.close(); // Always close the connection
+              }
+            });
+          } else {
+            // Handle transaction begin failure
+            context.response().setStatusCode(500).end("Failed to begin transaction.");
+            connection.close(); // Always close the connection
+          }
+        });
       } else {
-        System.err.println("❌ Fehler beim Löschen des Benutzers: ID " + id);
-        context.response().setStatusCode(404).end("Benutzer nicht gefunden");
+        // Handle connection failure
+        context.response().setStatusCode(500).end("Failed to get database connection.");
       }
     });
   }
@@ -264,10 +346,10 @@ public class MainVerticle extends AbstractVerticle {
   // Recipe handlers
   private void addRecipe(RoutingContext routingContext) {
     JsonObject body = routingContext.getBodyAsJson();
-    if (body == null) {
+    if (body == null || !body.containsKey("title") || !body.containsKey("ingredients") || !body.containsKey("instructions")) {
       routingContext.response()
         .setStatusCode(400)
-        .end(new JsonObject().put("message", "Request body is required").encode());
+        .end(new JsonObject().put("message", "Missing required fields: title, ingredients, instructions.").encode());
       return;
     }
 
@@ -337,6 +419,15 @@ public class MainVerticle extends AbstractVerticle {
 
   private void getRecipesById(RoutingContext routingContext) {
     String id = routingContext.request().getParam("id");
+
+    try {
+      int recipeId = Integer.parseInt(id);
+    } catch (NumberFormatException e) {
+      routingContext.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Invalid recipe ID: must be a number").encode());
+      return;
+    }
 
     client.getConnection(conn -> {
       if (conn.succeeded()) {
@@ -484,6 +575,60 @@ public class MainVerticle extends AbstractVerticle {
           });
       } else {
         routingContext.fail(conn.cause()); // Connection failed
+      }
+    });
+  }
+  private void searchRecipes(RoutingContext context) {
+    // Get the search query from the request
+    List<String> queryParams = context.queryParam("q");
+    if (queryParams.isEmpty()) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Search query parameter 'q' is required").encode());
+      return;
+    }
+
+    String query = queryParams.get(0).trim();
+    if (query.isEmpty()) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Search query cannot be empty").encode());
+      return;
+    }
+
+    // SQL query to search for recipes by title or ingredients
+    String sql = "SELECT * FROM recipes WHERE title LIKE ? OR ingredients LIKE ?";
+
+    // Use the MySQL client to execute the query
+    client.preparedQuery(sql).execute(Tuple.of("%" + query + "%", "%" + query + "%"), ar -> {
+      if (ar.succeeded()) {
+        RowSet<Row> rows = ar.result();
+        List<Rezept> recipes = new ArrayList<>();
+
+        // Map rows to Rezept objects
+        for (Row row : rows) {
+          Rezept rezept = new Rezept();
+          rezept.setId(row.getInteger("id"));
+          rezept.setUserId(row.getInteger("user_id"));
+          rezept.setTitle(row.getString("title"));
+          rezept.setDescription(row.getString("description"));
+          rezept.setIngredients(Json.decodeValue(row.getString("ingredients"), List.class));
+          rezept.setInstructions(Json.decodeValue(row.getString("instructions"), List.class));
+          rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
+          recipes.add(rezept);
+        }
+
+        // Return the recipes as JSON
+        context.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(Json.encodePrettily(recipes));
+      } else {
+        // Handle database errors
+        System.err.println("❌ Error searching recipes: " + ar.cause().getMessage());
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Failed to search recipes: " + ar.cause().getMessage()).encode());
       }
     });
   }
