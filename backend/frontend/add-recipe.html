@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Recipe</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="add-recipe.js"></script>
+</head>
+<body class="text-center">
+<div class="container mt-5">
+  <h2>Add Recipe</h2>
+  <form id="addRecipeForm">
+    <input type="text" id="title" class="form-control mb-2" placeholder="Title" required>
+    <textarea id="description" class="form-control mb-2" placeholder="Description"></textarea>
+    <textarea id="ingredients" class="form-control mb-2" placeholder="Ingredients (comma-separated)" required></textarea>
+    <textarea id="instructions" class="form-control mb-2" placeholder="Instructions (comma-separated)" required></textarea>
+    <input type="file" id="image" class="form-control mb-2" accept="image/*" required>
+    <button type="submit" class="btn btn-success">Add Recipe</button>
+  </form>
+  <p id="message" class="mt-2 text-danger"></p>
+</div>
+</body>
+</html>

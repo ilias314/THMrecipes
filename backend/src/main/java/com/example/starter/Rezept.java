@@ -7,64 +7,29 @@ public class Rezept {
   private int userId;
   private String title;
   private String description;
-  private List<String> ingredients;  // List of ingredients
-  private List<String> instructions; // List of instructions
+  private List<String> ingredients;
+  private List<String> instructions;
   private String createdAt;
 
-  // Getters and Setters
-  public int getId() {
-    return id;
-  }
+  // Getters and setters
+  public int getId() { return id; }
+  public void setId(int id) { this.id = id; }
 
-  public void setId(int id) {
-    this.id = id;
-  }
+  public int getUserId() { return userId; }
+  public void setUserId(int userId) { this.userId = userId; }
 
-  public int getUserId() {
-    return userId;
-  }
+  public String getTitle() { return title; }
+  public void setTitle(String title) { this.title = title; }
 
-  public void setUserId(int userId) {
-    this.userId = userId;
-  }
+  public String getDescription() { return description; }
+  public void setDescription(String description) { this.description = description; }
 
-  public String getTitle() {
-    return title;
-  }
+  public List<String> getIngredients() { return ingredients; }
+  public void setIngredients(List<String> ingredients) { this.ingredients = ingredients; }
 
-  public void setTitle(String title) {
-    this.title = title;
-  }
+  public List<String> getInstructions() { return instructions; }
+  public void setInstructions(List<String> instructions) { this.instructions = instructions; }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public List<String> getIngredients() {
-    return ingredients;
-  }
-
-  public void setIngredients(List<String> ingredients) {
-    this.ingredients = ingredients;
-  }
-
-  public List<String> getInstructions() {
-    return instructions;
-  }
-
-  public void setInstructions(List<String> instructions) {
-    this.instructions = instructions;
-  }
-
-  public String getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(String createdAt) {
-    this.createdAt = createdAt;
-  }
+  public String getCreatedAt() { return createdAt; }
+  public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }

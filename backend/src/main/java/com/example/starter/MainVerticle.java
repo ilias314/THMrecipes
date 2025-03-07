@@ -26,7 +26,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MainVerticle extends AbstractVerticle {
   private MySQLPool client;
@@ -76,6 +76,13 @@ public class MainVerticle extends AbstractVerticle {
       .allowedHeader("Authorization"));
 
     router.route("/*").handler(StaticHandler.create("frontend"));
+    router.route("/images/*").handler(StaticHandler.create()
+      .setWebRoot("infp-wise-24-25-team-04/frontend/images")
+      .setAllowRootFileSystemAccess(true)
+      .setCachingEnabled(false) // Kein Cache für Debugging
+      .setDefaultContentEncoding("UTF-8")
+    );
+
 
     router.route("/protected-route").handler(JWTAuthHandler.create(jwtProvider));
 
@@ -124,6 +131,14 @@ public class MainVerticle extends AbstractVerticle {
     router.put("/comments/:id").handler(this::updateComment);
     router.delete("/comments/:id").handler(this::deleteComment);
     router.get("/users/:userId/comments").handler(this::getUserComments);
+
+    router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("infp-wise-24-25-team-04/frontend/images")).handler(this::uploadImage);
+    router.route("/images/*").handler(StaticHandler.create()
+      .setAllowRootFileSystemAccess(true)
+      .setWebRoot("infp-wise-24-25-team-04/frontend/images"));
+
+
+
 
     vertx.createHttpServer().requestHandler(router).listen(8080, http -> {
       if (http.succeeded()) {
@@ -218,7 +233,6 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  // 📌 UPDATE: Benutzer aktualisieren
   private void updateUser(RoutingContext context) {
     String id = context.pathParam("id");
 
@@ -262,9 +276,12 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
 
+    // Hash the new password
+    String hashedPassword = BCrypt.hashpw(body.getString("password"), BCrypt.gensalt());
+
     // Execute the database query
     String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
-    client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), body.getString("password"), Integer.parseInt(id)), ar -> {
+    client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), hashedPassword, Integer.parseInt(id)), ar -> {
       if (ar.succeeded() && ar.result().rowCount() > 0) {
         context.response().end("✅ Benutzer aktualisiert");
       } else {
@@ -350,7 +367,9 @@ public class MainVerticle extends AbstractVerticle {
   private void register(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
     if (!isValidPassword(body.getString("password"))) {
-      context.response().setStatusCode(400).end("Passwort muss mindestens einen Großbuchstaben und zwei Ziffern enthalten.");
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Passwort muss mindestens einen Großbuchstaben und zwei Ziffern enthalten.").encode());
       return;
     }
 
@@ -359,9 +378,13 @@ public class MainVerticle extends AbstractVerticle {
 
     client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), hashedPassword), ar -> {
       if (ar.succeeded()) {
-        context.response().setStatusCode(201).end("Benutzer erfolgreich registriert.");
+        context.response()
+          .setStatusCode(201)
+          .end(new JsonObject().put("message", "Benutzer erfolgreich registriert.").encode());
       } else {
-        context.response().setStatusCode(500).end("Fehler bei der Registrierung.");
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Fehler bei der Registrierung.").encode());
       }
     });
   }
@@ -411,11 +434,15 @@ public class MainVerticle extends AbstractVerticle {
     Rezept rezept = body.mapTo(Rezept.class);
     System.out.println("Adding recipe: " + rezept.getTitle());
 
+    // Convert ingredients and instructions to text
+    String ingredientsText = String.join(", ", rezept.getIngredients());
+    String instructionsText = String.join(", ", rezept.getInstructions());
+
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
         connection.preparedQuery("INSERT INTO recipes (user_id, title, description, ingredients, instructions) VALUES (?, ?, ?, ?, ?)")
-          .execute(Tuple.of(rezept.getUserId(), rezept.getTitle(), rezept.getDescription(), Json.encode(rezept.getIngredients()), Json.encode(rezept.getInstructions())), ar -> {
+          .execute(Tuple.of(rezept.getUserId(), rezept.getTitle(), rezept.getDescription(), ingredientsText, instructionsText), ar -> {
             connection.close();
             if (ar.succeeded()) {
               routingContext.response()
@@ -453,11 +480,17 @@ public class MainVerticle extends AbstractVerticle {
               rezept.setUserId(row.getInteger("user_id"));
               rezept.setTitle(row.getString("title"));
               rezept.setDescription(row.getString("description"));
-              rezept.setIngredients(Json.decodeValue(row.getString("ingredients"), List.class));
-              rezept.setInstructions(Json.decodeValue(row.getString("instructions"), List.class));
+
+              // Parse ingredients and instructions from text to arrays
+              String ingredientsText = row.getString("ingredients");
+              String instructionsText = row.getString("instructions");
+              rezept.setIngredients(Arrays.asList(ingredientsText.split(", ")));
+              rezept.setInstructions(Arrays.asList(instructionsText.split(", ")));
+
               rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
               recipes.add(rezept);
             });
+
             routingContext.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -742,49 +775,35 @@ public class MainVerticle extends AbstractVerticle {
   private void getRecipeRatings(RoutingContext context) {
     String recipeId = context.pathParam("recipeId");
 
-    // Check if recipe exists
-    client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
-      .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
-        if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
-          client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.recipe_id = ?")
-            .execute(Tuple.of(Integer.parseInt(recipeId)), ar -> {
-              if (ar.succeeded()) {
-                List<JsonObject> ratings = new ArrayList<>();
-                ar.result().forEach(row -> {
-                  JsonObject rating = new JsonObject()
-                    .put("id", row.getInteger("id"))
-                    .put("userId", row.getInteger("user_id"))
-                    .put("recipeId", row.getInteger("recipe_id"))
-                    .put("rating", row.getInteger("rating"))
-                    .put("createdAt", row.getLocalDateTime("created_at").toString())
-                    .put("username", row.getString("username"));
-                  ratings.add(rating);
-                });
+    client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.recipe_id = ?")
+      .execute(Tuple.of(Integer.parseInt(recipeId)), ar -> {
+        if (ar.succeeded()) {
+          List<JsonObject> ratings = new ArrayList<>();
+          ar.result().forEach(row -> {
+            JsonObject rating = new JsonObject()
+              .put("id", row.getInteger("id"))
+              .put("userId", row.getInteger("user_id"))
+              .put("recipeId", row.getInteger("recipe_id"))
+              .put("rating", row.getInteger("rating"))
+              .put("createdAt", row.getLocalDateTime("created_at").toString())
+              .put("username", row.getString("username"));
+            ratings.add(rating);
+          });
 
-                // Calculate average rating
-                double averageRating = ratings.stream()
-                  .mapToInt(r -> r.getInteger("rating"))
-                  .average()
-                  .orElse(0.0);
-
-                JsonObject response = new JsonObject()
-                  .put("ratings", new JsonArray(ratings))
-                  .put("averageRating", averageRating)
-                  .put("count", ratings.size());
-
-                context.response()
-                  .putHeader("content-type", "application/json")
-                  .end(response.encode());
-              } else {
-                context.response()
-                  .setStatusCode(500)
-                  .end(new JsonObject().put("message", "Failed to get ratings: " + ar.cause().getMessage()).encode());
-              }
-            });
+          // Return an empty array if no ratings are found
+          if (ratings.isEmpty()) {
+            context.response()
+              .putHeader("content-type", "application/json")
+              .end(new JsonArray().encode());
+          } else {
+            context.response()
+              .putHeader("content-type", "application/json")
+              .end(new JsonArray(ratings).encode());
+          }
         } else {
           context.response()
-            .setStatusCode(404)
-            .end(new JsonObject().put("message", "Recipe not found").encode());
+            .setStatusCode(500)
+            .end(new JsonObject().put("message", "Failed to get ratings: " + ar.cause().getMessage()).encode());
         }
       });
   }
@@ -1265,6 +1284,27 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+  private void uploadImage(RoutingContext context) {
+    context.fileUploads().forEach(file -> {
+      String uploadedFileName = file.uploadedFileName();
+      String targetFileName = "infp-wise-24-25-team-04/frontend/images/" + file.fileName(); // ✅ Richtiger Speicherort
+
+      System.out.println(" Bild wird gespeichert unter: " + targetFileName);
+
+      vertx.fileSystem().move(uploadedFileName, targetFileName, res -> {
+        if (res.succeeded()) {
+          String imageUrl = "/images/" + file.fileName();
+          System.out.println("✅ Bild erfolgreich gespeichert: " + imageUrl);
+          context.response().setStatusCode(200).putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("image_url", imageUrl).encode());
+        } else {
+          System.err.println("❌ Fehler beim Speichern des Bildes: " + res.cause().getMessage());
+          context.response().setStatusCode(500).end("❌ Fehler beim Speichern des Bildes.");
+        }
+      });
+    });
+  }
+
 
 
 }
