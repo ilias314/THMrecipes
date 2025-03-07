@@ -1,125 +1,79 @@
+const API_URL = "http://localhost:8080";
+
 // Login Function
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  // Check if email and password are filled
   if (!email || !password) {
-    document.getElementById("message").textContent = "Bitte alle Felder ausfüllen!";
+    alert("Please fill in all fields!");
     return;
   }
 
   try {
-    // Send login request to the backend
-    const response = await fetch("http://localhost:8080/login", {
+    const response = await fetch(`${API_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
 
     const result = await response.json();
 
-    // Check if the response is successful
     if (response.ok) {
-      // Validate the response data
       if (!result.token || !result.userId) {
-        throw new Error("Antwort vom Server ist ungültig! `userId` oder `token` fehlt.");
+        throw new Error("Invalid response from server: token or userId missing.");
       }
 
-      // Store token and user ID in localStorage
+      // Save token and userId in localStorage
       localStorage.setItem("token", result.token);
       localStorage.setItem("userId", result.userId);
 
-      console.log(`🔑 Erfolgreich eingeloggt! userId: ${result.userId}`);
-
-      // Redirect to the home page
-      window.location.href = "recipes.html"; // Updated to match your file structure
+      console.log("Login successful! Redirecting to home page...");
+      window.location.href = "index.html";
     } else {
-      // Handle login failure
-      throw new Error(result.message || "Login fehlgeschlagen!");
+      throw new Error(result.message || "Login failed!");
     }
   } catch (error) {
-    // Handle errors
-    console.error("❌ Fehler beim Login:", error);
-    document.getElementById("message").textContent = error.message;
+    console.error("❌ Error during login:", error);
+    alert(error.message);
   }
 }
 
-// Registration Function
+// Register Function
 async function register() {
   const username = document.getElementById("username").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  // Check if all fields are filled
   if (!username || !email || !password) {
-    document.getElementById("message").textContent = "Bitte alle Felder ausfüllen!";
+    alert("Please fill in all fields!");
     return;
   }
 
   try {
-    // Send registration request to the backend
-    const response = await fetch("http://localhost:8080/register", {
+    const response = await fetch(`${API_URL}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password })
+      body: JSON.stringify({ username, email, password }),
     });
 
-    const result = await response.json();
+    const result = await response.text();
 
-    // Check if the response is successful
     if (response.ok) {
-      console.log("✅ Erfolgreich registriert!");
-      // Redirect to the login page after successful registration
+      alert("Registration successful! Redirecting to login page...");
       window.location.href = "login.html";
     } else {
-      throw new Error(result.message || "Registrierung fehlgeschlagen!");
+      throw new Error(result || "Registration failed!");
     }
   } catch (error) {
-    // Handle errors
-    console.error("❌ Fehler bei der Registrierung:", error);
-    document.getElementById("message").textContent = error.message;
+    console.error("❌ Error during registration:", error);
+    alert("Registration failed!");
   }
 }
 
 // Logout Function
 function logout() {
-  // Remove token and user ID from localStorage
   localStorage.removeItem("token");
   localStorage.removeItem("userId");
-
-  // Redirect to the login page
   window.location.href = "login.html";
 }
-
-// Optional: Event Listener for the Enter Key
-document.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    if (window.location.pathname.endsWith("login.html")) {
-      login();
-    } else if (window.location.pathname.endsWith("register.html")) {
-      register();
-    }
-  }
-});
-
-// Add event listeners for login and register buttons
-document.addEventListener("DOMContentLoaded", () => {
-  const loginButton = document.getElementById("loginButton");
-  if (loginButton) {
-    loginButton.addEventListener("click", login);
-  }
-
-  const registerButton = document.getElementById("registerButton");
-  if (registerButton) {
-    registerButton.addEventListener("click", register);
-  }
-
-  const logoutLink = document.querySelector('a[href="logout"]');
-  if (logoutLink) {
-    logoutLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      logout();
-    });
-  }
-});

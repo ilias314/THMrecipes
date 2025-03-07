@@ -4,28 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - Recipe App</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
-  <h1>Recipe App</h1>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="recipes.html">Recipes</a>
-    <a href="logout">Logout</a>
-  </nav>
-</header>
-<main>
-  <h2>Profile</h2>
-  <div id="profileInfo"></div>
-  <h3>Your Recipes</h3>
-  <div id="userRecipes"></div>
-  <h3>Your Comments</h3>
-  <div id="userComments"></div>
-  <h3>Your Ratings</h3>
-  <div id="userRatings"></div>
-</main>
-<script src="shared.js"></script> <!-- Include shared.js -->
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">Recipe App</a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="recipes.html">Recipes</a>
+      <a class="nav-link" href="#" onclick="logout()">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white text-center">
+          <h4>Profile</h4>
+        </div>
+        <div class="card-body">
+          <div id="profileInfo"></div>
+          <h3>Your Recipes</h3>
+          <div id="userRecipes"></div>
+          <h3>Your Comments</h3>
+          <div id="userComments"></div>
+          <h3>Your Ratings</h3>
+          <div id="userRatings"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="shared.js"></script>
 <script src="profile.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>

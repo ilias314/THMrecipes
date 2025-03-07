@@ -75,13 +75,13 @@ public class MainVerticle extends AbstractVerticle {
       .allowedHeader("Content-Type")
       .allowedHeader("Authorization"));
 
-    router.route("/*").handler(StaticHandler.create("frontend"));
     router.route("/images/*").handler(StaticHandler.create()
-      .setWebRoot("infp-wise-24-25-team-04/frontend/images")
+      .setWebRoot("images")
       .setAllowRootFileSystemAccess(true)
       .setCachingEnabled(false) // Kein Cache für Debugging
       .setDefaultContentEncoding("UTF-8")
     );
+
 
 
     router.route("/protected-route").handler(JWTAuthHandler.create(jwtProvider));
@@ -132,10 +132,13 @@ public class MainVerticle extends AbstractVerticle {
     router.delete("/comments/:id").handler(this::deleteComment);
     router.get("/users/:userId/comments").handler(this::getUserComments);
 
-    router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("infp-wise-24-25-team-04/frontend/images")).handler(this::uploadImage);
+    router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("images")).handler(this::uploadImage);
     router.route("/images/*").handler(StaticHandler.create()
+      .setWebRoot("images")
       .setAllowRootFileSystemAccess(true)
-      .setWebRoot("infp-wise-24-25-team-04/frontend/images"));
+      .setCachingEnabled(false)
+      .setDefaultContentEncoding("UTF-8"));
+
 
 
 
@@ -422,96 +425,104 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   // Recipe handlers
-  private void addRecipe(RoutingContext routingContext) {
-    JsonObject body = routingContext.getBodyAsJson();
-    if (body == null || !body.containsKey("title") || !body.containsKey("ingredients") || !body.containsKey("instructions")) {
-      routingContext.response()
+  private void addRecipe(RoutingContext context) {
+    JsonObject body = context.getBodyAsJson();
+    int userId = context.user().principal().getInteger("userId");
+
+    // Validate required fields
+    if (body == null || !body.containsKey("title") || !body.containsKey("description") ||
+      !body.containsKey("ingredients") || !body.containsKey("instructions")) {
+      context.response()
         .setStatusCode(400)
-        .end(new JsonObject().put("message", "Missing required fields: title, ingredients, instructions.").encode());
+        .end(new JsonObject().put("message", "Missing required fields: title, description, ingredients, instructions.").encode());
       return;
     }
 
-    Rezept rezept = body.mapTo(Rezept.class);
-    System.out.println("Adding recipe: " + rezept.getTitle());
+    // Extract fields from the request body
+    String title = body.getString("title");
+    String description = body.getString("description");
+    String ingredients = body.getString("ingredients");
+    String instructions = body.getString("instructions");
+    String imageUrl = body.getString("image_url", "/images/default.png"); // Default image if none provided
 
-    // Convert ingredients and instructions to text
-    String ingredientsText = String.join(", ", rezept.getIngredients());
-    String instructionsText = String.join(", ", rezept.getInstructions());
+    // Debugging: Log the received data
+    System.out.println("📦 Received recipe data: " + body.encodePrettily());
+    System.out.println("🖼️ Image URL: " + imageUrl);
 
+    // SQL query to insert the recipe into the database
+    String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url) VALUES (?, ?, ?, ?, ?, ?)";
+
+    // Execute the query
+    client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl), ar -> {
+      if (ar.succeeded()) {
+        System.out.println("✅ Recipe successfully saved: " + title);
+        context.response()
+          .setStatusCode(201)
+          .end(new JsonObject().put("message", "✅ Recipe created successfully!").encode());
+      } else {
+        System.err.println("❌ Error saving recipe: " + ar.cause().getMessage());
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "❌ Failed to save recipe: " + ar.cause().getMessage()).encode());
+      }
+    });
+  }
+
+
+  private void getAllRecipes(RoutingContext context) {
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
-        connection.preparedQuery("INSERT INTO recipes (user_id, title, description, ingredients, instructions) VALUES (?, ?, ?, ?, ?)")
-          .execute(Tuple.of(rezept.getUserId(), rezept.getTitle(), rezept.getDescription(), ingredientsText, instructionsText), ar -> {
-            connection.close();
-            if (ar.succeeded()) {
-              routingContext.response()
-                .setStatusCode(201)
-                .putHeader("content-type", "application/json")
-                .end(Json.encodePrettily(rezept));
-            } else {
-              System.err.println("❌ Error inserting recipe: " + ar.cause().getMessage());
-              routingContext.response()
-                .setStatusCode(500)
-                .end(new JsonObject().put("message", "Failed to insert recipe: " + ar.cause().getMessage()).encode());
-            }
-          });
+        connection.query("SELECT * FROM recipes").execute(ar -> {
+          connection.close(); // Always close the connection
+          if (ar.succeeded()) {
+            JsonArray recipes = new JsonArray();
+            ar.result().forEach(row -> {
+              JsonObject recipe = new JsonObject()
+                .put("id", row.getInteger("id"))
+                .put("user_id", row.getInteger("user_id"))
+                .put("title", row.getString("title"))
+                .put("description", row.getString("description"))
+                .put("image_url", row.getString("image_url"))
+                .put("created_at", row.getLocalDateTime("created_at").toString());
+
+              // Parse ingredients and instructions from text to arrays
+              String ingredientsText = row.getString("ingredients");
+              String instructionsText = row.getString("instructions");
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(", "))));
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(", "))));
+
+              recipes.add(recipe);
+            });
+
+            context.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(recipes.encode());
+          } else {
+            System.err.println("❌ Error fetching recipes: " + ar.cause().getMessage());
+            context.response()
+              .setStatusCode(500)
+              .end(new JsonObject().put("message", "Failed to fetch recipes: " + ar.cause().getMessage()).encode());
+          }
+        });
       } else {
         System.err.println("❌ Failed to connect to database: " + conn.cause().getMessage());
-        routingContext.response()
+        context.response()
           .setStatusCode(500)
           .end(new JsonObject().put("message", "Failed to connect to database: " + conn.cause().getMessage()).encode());
       }
     });
   }
 
+  private void getRecipesById(RoutingContext context) {
+    String id = context.pathParam("id");
 
-  private void getAllRecipes(RoutingContext routingContext) {
-    client.getConnection(conn -> {
-      if (conn.succeeded()) {
-        SqlConnection connection = conn.result();
-        connection.query("SELECT * FROM recipes").execute(ar -> {
-          connection.close();
-          if (ar.succeeded()) {
-            List<Rezept> recipes = new ArrayList<>();
-            ar.result().forEach(row -> {
-              Rezept rezept = new Rezept();
-              rezept.setId(row.getInteger("id"));
-              rezept.setUserId(row.getInteger("user_id"));
-              rezept.setTitle(row.getString("title"));
-              rezept.setDescription(row.getString("description"));
-
-              // Parse ingredients and instructions from text to arrays
-              String ingredientsText = row.getString("ingredients");
-              String instructionsText = row.getString("instructions");
-              rezept.setIngredients(Arrays.asList(ingredientsText.split(", ")));
-              rezept.setInstructions(Arrays.asList(instructionsText.split(", ")));
-
-              rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
-              recipes.add(rezept);
-            });
-
-            routingContext.response()
-              .setStatusCode(200)
-              .putHeader("content-type", "application/json")
-              .end(Json.encodePrettily(recipes));
-          } else {
-            routingContext.fail(500);
-          }
-        });
-      } else {
-        routingContext.fail(conn.cause());
-      }
-    });
-  }
-
-  private void getRecipesById(RoutingContext routingContext) {
-    String id = routingContext.request().getParam("id");
-
+    // Validate recipe ID
     try {
       int recipeId = Integer.parseInt(id);
     } catch (NumberFormatException e) {
-      routingContext.response()
+      context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Invalid recipe ID: must be a number").encode());
       return;
@@ -522,35 +533,59 @@ public class MainVerticle extends AbstractVerticle {
         SqlConnection connection = conn.result();
         connection.preparedQuery("SELECT * FROM recipes WHERE id = ?")
           .execute(Tuple.of(Integer.parseInt(id)), ar -> {
-            connection.close();
+            connection.close(); // Always close the connection
             if (ar.succeeded() && ar.result().size() > 0) {
-              Rezept rezept = new Rezept();
-              rezept.setId(ar.result().iterator().next().getInteger("id"));
-              rezept.setUserId(ar.result().iterator().next().getInteger("user_id"));
-              rezept.setTitle(ar.result().iterator().next().getString("title"));
-              rezept.setDescription(ar.result().iterator().next().getString("description"));
-              rezept.setIngredients(Json.decodeValue(ar.result().iterator().next().getString("ingredients"), List.class));
-              rezept.setInstructions(Json.decodeValue(ar.result().iterator().next().getString("instructions"), List.class));
-              rezept.setCreatedAt(ar.result().iterator().next().getLocalDateTime("created_at").toString());
-              routingContext.response()
+              Row row = ar.result().iterator().next();
+
+              // Create a JsonObject for the recipe
+              JsonObject recipe = new JsonObject()
+                .put("id", row.getInteger("id"))
+                .put("user_id", row.getInteger("user_id"))
+                .put("title", row.getString("title"))
+                .put("description", row.getString("description"))
+                .put("image_url", row.getString("image_url"))
+                .put("created_at", row.getLocalDateTime("created_at").toString());
+
+              // Parse ingredients and instructions from text to arrays
+              String ingredientsText = row.getString("ingredients");
+              String instructionsText = row.getString("instructions");
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(", "))));
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(", "))));
+
+              // Send the response
+              context.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
-                .end(Json.encodePrettily(rezept));
+                .end(recipe.encode());
             } else {
-              routingContext.response().setStatusCode(404).end();
+              context.response()
+                .setStatusCode(404)
+                .end(new JsonObject().put("message", "❌ Recipe not found.").encode());
             }
           });
       } else {
-        routingContext.fail(conn.cause());
+        System.err.println("❌ Failed to connect to database: " + conn.cause().getMessage());
+        context.response()
+          .setStatusCode(500)
+          .end(new JsonObject().put("message", "Failed to connect to database: " + conn.cause().getMessage()).encode());
       }
     });
   }
 
   // Handler for updating a recipe
-  private void updateRecipe(RoutingContext routingContext) {
-    String recipeId = routingContext.pathParam("id");
-    JsonObject body = routingContext.body().asJsonObject();
-    Integer userIdFromToken = routingContext.user().principal().getInteger("userId");
+  private void updateRecipe(RoutingContext context) {
+    String recipeId = context.pathParam("id");
+    JsonObject body = context.getBodyAsJson();
+    Integer userIdFromToken = context.user().principal().getInteger("userId");
+
+    // Validate required fields
+    if (!body.containsKey("title") || !body.containsKey("description") ||
+      !body.containsKey("ingredients") || !body.containsKey("instructions")) {
+      context.response()
+        .setStatusCode(400)
+        .end(new JsonObject().put("message", "Missing required fields: title, description, ingredients, instructions.").encode());
+      return;
+    }
 
     // Check if the recipe exists and belongs to the user
     String checkOwnershipQuery = "SELECT user_id FROM recipes WHERE id = ?";
@@ -558,31 +593,41 @@ public class MainVerticle extends AbstractVerticle {
       if (checkResult.succeeded() && checkResult.result().size() > 0) {
         int ownerId = checkResult.result().iterator().next().getInteger("user_id");
 
+        // Ensure the user owns the recipe
         if (ownerId != userIdFromToken) {
-          routingContext.response().setStatusCode(403).end("Forbidden: You can only modify your own recipes.");
+          context.response()
+            .setStatusCode(403)
+            .end(new JsonObject().put("message", "Forbidden: You can only modify your own recipes.").encode());
           return;
         }
 
         // Update the recipe
-        String updateQuery = "UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ? WHERE id = ?";
+        String updateQuery = "UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ?, image_url = ? WHERE id = ?";
         Tuple params = Tuple.of(
           body.getString("title", ""), // Default to empty string if not provided
           body.getString("description", ""), // Default to empty string if not provided
-          Json.encode(body.getJsonArray("ingredients", new JsonArray())), // Default to empty JsonArray if not provided
-          Json.encode(body.getJsonArray("instructions", new JsonArray())), // Default to empty JsonArray if not provided
+          body.getString("ingredients", ""), // Default to empty string if not provided
+          body.getString("instructions", ""), // Default to empty string if not provided
+          body.getString("image_url", "/images/default.png"), // Default image if not provided
           Integer.parseInt(recipeId)
         );
 
         client.preparedQuery(updateQuery).execute(params, updateResult -> {
           if (updateResult.succeeded()) {
-            routingContext.response().setStatusCode(200).end("Recipe updated");
+            context.response()
+              .setStatusCode(200)
+              .end(new JsonObject().put("message", "✅ Recipe updated successfully!").encode());
           } else {
             System.err.println("❌ Error updating recipe: " + updateResult.cause().getMessage());
-            routingContext.response().setStatusCode(500).end("Failed to update recipe");
+            context.response()
+              .setStatusCode(500)
+              .end(new JsonObject().put("message", "Failed to update recipe: " + updateResult.cause().getMessage()).encode());
           }
         });
       } else {
-        routingContext.response().setStatusCode(404).end("Recipe not found");
+        context.response()
+          .setStatusCode(404)
+          .end(new JsonObject().put("message", "❌ Recipe not found.").encode());
       }
     });
   }
@@ -1287,9 +1332,9 @@ public class MainVerticle extends AbstractVerticle {
   private void uploadImage(RoutingContext context) {
     context.fileUploads().forEach(file -> {
       String uploadedFileName = file.uploadedFileName();
-      String targetFileName = "infp-wise-24-25-team-04/frontend/images/" + file.fileName(); // ✅ Richtiger Speicherort
+      String targetFileName = "images/" + file.fileName(); // ✅ Richtiger Speicherort
 
-      System.out.println(" Bild wird gespeichert unter: " + targetFileName);
+      System.out.println("📤 Bild wird gespeichert unter: " + targetFileName);
 
       vertx.fileSystem().move(uploadedFileName, targetFileName, res -> {
         if (res.succeeded()) {
@@ -1304,6 +1349,7 @@ public class MainVerticle extends AbstractVerticle {
       });
     });
   }
+
 
 
 

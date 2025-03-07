@@ -1,64 +1,88 @@
+/* General Styles */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
+  font-family: 'Open Sans', sans-serif;
+  background-color: #F5F5F5;
+  color: #2C3E50;
 }
 
-header {
-  background-color: #333;
-  color: #fff;
-  padding: 10px 0;
-  text-align: center;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
 }
 
-header h1 {
-  margin: 0;
+/* Hero Section */
+.hero-section {
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
 }
 
-nav {
-  margin-top: 10px;
+.overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 10px;
 }
 
-nav a {
-  color: #fff;
-  margin: 0 10px;
-  text-decoration: none;
+/* Recipe Cards */
+.recipe-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-main {
+.recipe-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-card img {
+  height: 200px;
+  object-fit: cover;
+}
+
+.recipe-card .card-body {
+  background-color: #fff;
   padding: 20px;
 }
 
-form {
-  margin-top: 20px;
-}
-
-form label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-form input, form button {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-form button {
-  background-color: #333;
-  color: #fff;
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(45deg, #E74C3C, #F1C40F);
   border: none;
-  cursor: pointer;
+  border-radius: 25px;
+  padding: 10px 20px;
+  transition: background 0.3s ease;
 }
 
-form button:hover {
-  background-color: #555;
+.btn-primary:hover {
+  background: linear-gradient(45deg, #F1C40F, #E74C3C);
 }
 
-#message {
-  color: red;
-  margin-top: 10px;
+/* Forms */
+.form-control {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus {
+  border-color: #E74C3C;
+  box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+/* Footer */
+footer {
+  margin-top: 50px;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
