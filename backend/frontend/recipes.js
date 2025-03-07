@@ -39,10 +39,13 @@ function displayRecipes(recipes) {
   recipesList.innerHTML = "";
 
   recipes.forEach(recipe => {
+    let imageUrl = recipe.imageUrl ? `${API_URL}${recipe.imageUrl}` : "default-image.jpg";
+    console.log("🖼️ Final Image URL:", imageUrl); // Debugging line
+
     const recipeCard = `
       <div class="col-md-4 mb-4">
         <div class="card recipe-card">
-          <img src="${recipe.imageUrl || 'default-image.jpg'}" class="card-img-top" alt="${recipe.title}">
+          <img src="${imageUrl}" class="card-img-top" alt="${recipe.title}">
           <div class="card-body">
             <h5 class="card-title">${recipe.title}</h5>
             <p class="card-text">${recipe.description}</p>
@@ -54,3 +57,4 @@ function displayRecipes(recipes) {
     recipesList.innerHTML += recipeCard;
   });
 }
+

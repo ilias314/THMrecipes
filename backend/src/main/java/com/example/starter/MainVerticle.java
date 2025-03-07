@@ -75,12 +75,7 @@ public class MainVerticle extends AbstractVerticle {
       .allowedHeader("Content-Type")
       .allowedHeader("Authorization"));
 
-    router.route("/images/*").handler(StaticHandler.create()
-      .setWebRoot("images")
-      .setAllowRootFileSystemAccess(true)
-      .setCachingEnabled(false) // Kein Cache für Debugging
-      .setDefaultContentEncoding("UTF-8")
-    );
+    router.route("/images/*").handler(StaticHandler.create("images"));
 
 
 
@@ -133,11 +128,8 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/users/:userId/comments").handler(this::getUserComments);
 
     router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("images")).handler(this::uploadImage);
-    router.route("/images/*").handler(StaticHandler.create()
-      .setWebRoot("images")
-      .setAllowRootFileSystemAccess(true)
-      .setCachingEnabled(false)
-      .setDefaultContentEncoding("UTF-8"));
+
+
 
 
 
@@ -443,7 +435,8 @@ public class MainVerticle extends AbstractVerticle {
     String description = body.getString("description");
     String ingredients = body.getString("ingredients");
     String instructions = body.getString("instructions");
-    String imageUrl = body.getString("image_url", "/images/default.png"); // Default image if none provided
+    String imageUrl = body.containsKey("imageUrl") ? body.getString("imageUrl") : "/images/default.png";
+
 
     // Debugging: Log the received data
     System.out.println("📦 Received recipe data: " + body.encodePrettily());
