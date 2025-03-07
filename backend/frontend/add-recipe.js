@@ -16,32 +16,27 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
 
       const submitButton = form.querySelector("button[type='submit']");
-      submitButton.disabled = true; // Disable submit button
-      showLoadingSpinner(); // Show spinner
+      submitButton.disabled = true;
+      showLoadingSpinner();
 
-      const title = document.getElementById("title").value;
-      const description = document.getElementById("description").value;
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
       const ingredients = document.getElementById("ingredients").value.split(",").map(item => item.trim());
       const instructions = document.getElementById("instructions").value.split("\n").map(item => item.trim());
       const imageFile = document.getElementById("imageUpload").files[0];
 
-      // Validate file type
-      if (!imageFile.type.startsWith("image/")) {
-        showToast("❌ Please upload a valid image file!", "danger");
-        hideLoadingSpinner();
+      if (!imageFile) {
+        console.error("❌ No image selected!");
+        showToast("❌ Please select an image.", "danger");
         submitButton.disabled = false;
+        hideLoadingSpinner();
         return;
       }
 
-      if (!title || !description || !ingredients.length || !instructions.length || !imageFile) {
-        showToast("❌ Please fill in all fields!", "danger");
-        hideLoadingSpinner();
-        submitButton.disabled = false;
-        return;
-      }
+      console.log("📸 Selected image:", imageFile);
 
       try {
-        // Step 1: Upload the image
+        // Step 1: Upload the Image
         const imageFormData = new FormData();
         imageFormData.append("image", imageFile);
 
@@ -50,21 +45,30 @@ document.addEventListener("DOMContentLoaded", () => {
           body: imageFormData,
         });
 
-        if (!imageResponse.ok) {
-          throw new Error("Failed to upload image.");
+        const imageResult = await imageResponse.json();
+        console.log("📤 Image upload response:", imageResult);
+
+        if (!imageResponse.ok || !imageResult.image_url) {
+          console.error("❌ Image upload failed:", imageResult);
+          showToast(`❌ Image upload failed: ${JSON.stringify(imageResult)}`, "danger");
+          submitButton.disabled = false;
+          hideLoadingSpinner();
+          return;
         }
 
-        const imageResult = await imageResponse.json();
         const imageUrl = imageResult.image_url;
+        console.log("🖼️ Image URL received:", imageUrl);
 
-        // Step 2: Add the recipe
+        // Step 2: Send Recipe Data to Backend
         const recipeData = {
           title,
           description,
           ingredients,
           instructions,
-          imageUrl,
+          imageUrl, // Using the received image URL
         };
+
+        console.log("📜 Sending recipe data:", recipeData);
 
         const recipeResponse = await fetch(`${API_URL}/recipes`, {
           method: "POST",
@@ -75,27 +79,30 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(recipeData),
         });
 
+        const recipeResult = await recipeResponse.json();
+        console.log("✅ Recipe creation response:", recipeResult);
+
         if (recipeResponse.ok) {
           showToast("✅ Recipe added successfully!", "success");
           setTimeout(() => {
             window.location.href = "recipes.html"; // Redirect to recipes page
           }, 2000);
         } else {
-          const errorData = await recipeResponse.json();
-          throw new Error(errorData.message || "Failed to add recipe.");
+          console.error("❌ Recipe creation failed:", recipeResult);
+          showToast(`❌ Failed to add recipe: ${recipeResult.message}`, "danger");
         }
       } catch (error) {
-        console.error("❌ Error adding recipe:", error);
-        console.error("Error details:", error.stack); // Log the full error stack
-        showToast(`❌ ${error.message}`, "danger");
+        console.error("❌ Error in submission:", error);
+        showToast("❌ Something went wrong!", "danger");
       } finally {
-        hideLoadingSpinner(); // Hide spinner
-        submitButton.disabled = false; // Re-enable submit button
+        hideLoadingSpinner();
+        submitButton.disabled = false;
       }
     });
   }
 });
 
+// 🌀 Show Loading Spinner
 function showLoadingSpinner() {
   document.getElementById("message").innerHTML = `
     <div class="spinner-border text-primary" role="status">
@@ -104,10 +111,12 @@ function showLoadingSpinner() {
   `;
 }
 
+// ❌ Hide Loading Spinner
 function hideLoadingSpinner() {
   document.getElementById("message").innerHTML = "";
 }
 
+// 🔔 Show Toast Notification
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
   const toastBody = toast.querySelector(".toast-body");
