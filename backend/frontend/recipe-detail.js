@@ -73,12 +73,24 @@ function displayRecipeDetails(recipe) {
   const ingredientsList = document.getElementById("ingredientsList");
   const instructionsList = document.getElementById("instructionsList");
   const recipeActions = document.getElementById("recipeActions");
+  const recipeImage = document.getElementById("recipeImage");
 
   recipeTitle.textContent = recipe.title;
   recipeDescription.textContent = recipe.description;
   ingredientsList.innerHTML = "";
   instructionsList.innerHTML = "";
 
+  // Set the recipe image
+  if (recipe.image_url) {
+    // Check if the URL already starts with http or a slash
+    recipeImage.src = (recipe.image_url.startsWith("http") || recipe.image_url.startsWith("/"))
+      ? recipe.image_url
+      : "/images/" + recipe.image_url;
+  } else {
+    recipeImage.src = "default-image.jpg";
+  }
+
+  // Populate ingredients list
   if (Array.isArray(recipe.ingredients)) {
     recipe.ingredients.forEach(ingredient => {
       const li = document.createElement("li");
@@ -89,6 +101,7 @@ function displayRecipeDetails(recipe) {
     console.warn("⚠ Ingredients is not an array:", recipe.ingredients);
   }
 
+  // Populate instructions list
   if (Array.isArray(recipe.instructions)) {
     recipe.instructions.forEach(instruction => {
       const li = document.createElement("li");
@@ -99,7 +112,7 @@ function displayRecipeDetails(recipe) {
     console.warn("⚠ Instructions is not an array:", recipe.instructions);
   }
 
-  // Show Edit/Delete buttons for recipe only if logged-in user is the owner.
+  // Show Edit/Delete buttons if user is the owner
   const loggedInUserId = parseInt(localStorage.getItem("userId"), 10);
   if (recipe.user_id === loggedInUserId) {
     recipeActions.innerHTML = `
@@ -110,6 +123,7 @@ function displayRecipeDetails(recipe) {
     recipeActions.innerHTML = "";
   }
 }
+
 
 async function updateRecipeFromModal() {
   const token = localStorage.getItem("accessToken");
