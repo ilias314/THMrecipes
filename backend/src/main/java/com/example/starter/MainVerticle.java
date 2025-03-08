@@ -1347,15 +1347,17 @@ public class MainVerticle extends AbstractVerticle {
   private void uploadImage(RoutingContext context) {
     context.fileUploads().forEach(file -> {
       String uploadedFileName = file.uploadedFileName();
-      String targetFileName = "images/" + file.fileName(); // ✅ Richtiger Speicherort
+      // Generate a unique file name by appending the current timestamp
+      String targetFileName = "images/" + System.currentTimeMillis() + "-" + file.fileName();
 
       System.out.println("📤 Bild wird gespeichert unter: " + targetFileName);
 
       vertx.fileSystem().move(uploadedFileName, targetFileName, res -> {
         if (res.succeeded()) {
-          String imageUrl = "/images/" + file.fileName();
+          String imageUrl = "/" + targetFileName;
           System.out.println("✅ Bild erfolgreich gespeichert: " + imageUrl);
-          context.response().setStatusCode(200).putHeader("Content-Type", "application/json")
+          context.response().setStatusCode(200)
+            .putHeader("Content-Type", "application/json")
             .end(new JsonObject().put("image_url", imageUrl).encode());
         } else {
           System.err.println("❌ Fehler beim Speichern des Bildes: " + res.cause().getMessage());
@@ -1364,6 +1366,7 @@ public class MainVerticle extends AbstractVerticle {
       });
     });
   }
+
   private void refreshToken(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
 
