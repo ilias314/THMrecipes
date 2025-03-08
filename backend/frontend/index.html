@@ -1,32 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Recipe App - Home</title>
-  <!-- Google Fonts (optional) -->
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-bs-theme="light">
-<!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
-    <a class="navbar-brand" href="index.html">Recipe App</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <a class="navbar-brand" href="#">Recipe App</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="recipes.html">Recipes</a></li>
-        <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-        <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
-        <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="recipes.html">Recipes</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="login.html">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="register.html">Register</a>
+        </li>
       </ul>
     </div>
   </div>
@@ -34,41 +43,22 @@
 
 <!-- Hero Section -->
 <section class="hero-section">
-  <div class="overlay">
-    <div class="text-center">
-      <h1 class="display-4">Discover Delicious Recipes</h1>
-      <p class="lead">Explore and share amazing recipes from around the world.</p>
-      <a href="recipes.html" class="btn btn-primary btn-lg mt-3">Get Started</a>
-    </div>
+  <div class="overlay"></div>
+  <div class="hero-text">
+    <h1 class="display-4 fw-bold">Discover Delicious Recipes</h1>
+    <p class="lead mb-4">Explore and share amazing recipes from around the world.</p>
+    <a href="recipes.html" class="btn btn-primary btn-lg">Get Started</a>
   </div>
 </section>
-
-<!-- Main Content -->
-<div class="container">
-  <div class="row my-5">
-    <div class="col-md-12 text-center">
-      <h2>Welcome to Recipe App</h2>
-      <p>Your one-stop destination for exploring and sharing recipes.</p>
-    </div>
-  </div>
-  <!-- Additional sections or featured recipes can be added here -->
-</div>
 
 <!-- Footer -->
 <footer>
   <div class="container">
-    <p>&copy; 2025 Recipe App. All rights reserved.</p>
-    <div>
-      <a href="#" class="text-white me-2"><i class="fab fa-facebook"></i></a>
-      <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>
-      <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
-    </div>
+    <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
   </div>
 </footer>
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Custom JS (if any) -->
-<script src="auth.js"></script>
 </body>
 </html>
