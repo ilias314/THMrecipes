@@ -6,12 +6,12 @@
   <title>Recipes - Recipe App</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <!-- Your Custom CSS -->
+  <!-- Unified Styles -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<!-- Navigation (Smaller Navbar) -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<!-- Bright Navbar for Recipes Page -->
+<nav class="navbar navbar-expand-lg navbar-light navbar-bright shadow-sm fixed-top">
   <div class="container">
     <a class="navbar-brand" href="index.html">Recipe App</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -30,33 +30,28 @@
 </nav>
 
 <!-- Main Content -->
-<div class="container py-5">
+<div class="container py-5" style="margin-top:70px;">
   <div class="row align-items-center mb-4">
     <div class="col-md-6">
       <h2 class="mb-0">Recipes</h2>
     </div>
     <div class="col-md-6 text-md-end mt-3 mt-md-0">
-      <!-- “Add Recipe” button that no longer hides behind navbar -->
       <a href="add-recipe.html" class="btn btn-success">Add Recipe</a>
     </div>
   </div>
-
   <!-- Recipes Grid -->
   <div class="row" id="recipesList">
-    <!-- JavaScript (recipes.js) will inject recipe cards here -->
+    <!-- Recipe cards will be injected here by recipes.js -->
   </div>
 </div>
 
-<!-- Footer -->
-<footer class="bg-dark text-white text-center py-3">
-  <div class="container">
-    <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
-  </div>
+<!-- Bright Footer for Recipes Page -->
+<footer class="footer-bright">
+  <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
 </footer>
 
-<!-- Bootstrap JS -->
+<!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Your Custom JS (fetching recipes, etc.) -->
 <script src="recipes.js"></script>
 <script src="auth.js"></script>
 </body>

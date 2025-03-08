@@ -24,7 +24,7 @@ async function login() {
       localStorage.setItem("userId", result.userId);
 
       console.log(`🔑 Erfolgreich eingeloggt! userId: ${result.userId}`);
-      window.location.href = "index.html";
+      window.location.href = "recipes.html";  // Redirect to recipes page
     } else {
       throw new Error(result.message || "Login fehlgeschlagen!");
     }

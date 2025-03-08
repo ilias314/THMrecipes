@@ -50,8 +50,8 @@ body {
 /* === Navbar (Header) === */
 .navbar {
   background-color: var(--navy);
-  padding: 0.3rem 1rem;  /* Compact vertical padding */
-  min-height: 50px;
+  padding: 0.2rem 1rem;  /* Reduced padding */
+  min-height: 40px;      /* Reduced minimum height */
   box-shadow: 0 2px 4px rgba(0, 31, 63, 0.5);
 }
 .navbar .navbar-brand,
@@ -77,8 +77,10 @@ footer p {
 
 /* === Container Spacing === */
 .container {
-  padding-top: 20px;
-  padding-bottom: 40px;
+  padding-top: 20px;  /* You may reduce this if needed */
+}
+.detail-container {
+  margin-top: 40px; /* Should match or be slightly more than navbar height */
 }
 
 /* === Hero Section (for index page) === */
@@ -152,14 +154,15 @@ footer p {
   background-color: var(--beige);
   color: var(--navy);
 }
-
 .custom-card-header {
-  background-color: var(--navy); /* Use your navy variable (#001f3f) */
-  color: var(--yellow);           /* Use your yellow variable (#FFDC00) */
+  background-color: var(--navy);
+  color: var(--yellow);
   border-bottom: none;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+
+
 
 
 /* === Responsive Adjustments === */

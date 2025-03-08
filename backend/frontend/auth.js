@@ -24,7 +24,7 @@ async function login() {
       localStorage.setItem("refreshToken", result.refreshToken);
       localStorage.setItem("userId", result.userId);
 
-      window.location.href = "index.html";
+      window.location.href = "recipes.html";
     } else {
       throw new Error(result.message || "Login failed!");
     }
