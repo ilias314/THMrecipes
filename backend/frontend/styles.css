@@ -1,57 +1,56 @@
-/* Color Palette:
-   Navy:   #001f3f
-   Yellow: #FFDC00
-   Beige:  #F5F5DC
-*/
+/* Color Palette (example: Navy, Yellow, Beige) */
+:root {
+  --navy:   #001f3f;
+  --yellow: #FFDC00;
+  --beige:  #F5F5DC;
+}
 
-/* Base styling and typography */
+/* Base styling */
 body {
   font-family: 'Open Sans', sans-serif;
-  background-color: #F5F5DC; /* Beige */
-  color: #001f3f; /* Navy text */
+  background-color: var(--beige);
+  color: var(--navy);
   margin: 0;
   padding: 0;
 }
 
-/* Navbar styling */
+/* Navbar */
 .navbar {
-  background-color: #001f3f; /* Navy */
-  padding: 0.3rem 1rem; /* Reduced vertical padding */
-  min-height: 50px;
+  background-color: var(--navy);
+  padding: 0.3rem 1rem;
+  min-height: 50px; /* Keep track of this height for hero calc() */
   box-shadow: 0 2px 4px rgba(0, 31, 63, 0.5);
 }
 
 .navbar .navbar-brand,
 .navbar .nav-link {
-  color: #FFDC00; /* Yellow */
+  color: var(--yellow);
 }
 
 .navbar .nav-link:hover {
-  color: #F5F5DC; /* Beige on hover */
+  color: var(--beige);
 }
 
 /* Hero Section */
 .hero-section {
-  background: url('default-image.jpg') center/cover no-repeat;
-  min-height: 80vh;
+  /* Make the hero fill the screen minus the navbar height */
+  min-height: calc(100vh - 50px); /* 50px = .navbar min-height */
+  background: url("default-image.jpg") center/cover no-repeat;
   position: relative;
-  margin-top: 50px; /* Matches navbar height */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  color: #FFDC00; /* Yellow hero text */
+  color: var(--yellow);
+  margin-top: 50px; /* Matches navbar height */
 }
 
-/* Fading overlay for hero background */
+/* Fading overlay */
 .hero-section .overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #001f3f; /* Navy overlay */
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--navy);
   opacity: 0;
   animation: fadeIn 1s forwards;
 }
@@ -69,49 +68,31 @@ body {
 
 /* Button styling */
 .btn-primary {
-  background-color: #FFDC00; /* Yellow */
+  background-color: var(--yellow);
   border: none;
   border-radius: 25px;
   padding: 0.75rem 1.5rem;
-  color: #001f3f; /* Navy text */
+  color: var(--navy);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: #F5F5DC; /* Beige on hover */
-  color: #001f3f;
+  background-color: var(--beige);
+  color: var(--navy);
 }
 
-/* Recipe Card styling */
-.card {
-  background-color: #F5F5DC; /* Beige */
-  color: #001f3f; /* Navy text */
-  border: none;
-  border-radius: 10px;
-  margin-bottom: 30px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 31, 63, 0.5);
-}
-
-.card-img-top {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  height: 200px;
-  object-fit: cover;
-}
-
-/* Footer styling */
+/* Footer */
 footer {
-  background-color: #001f3f; /* Navy */
-  color: #FFDC00; /* Yellow */
-  padding: 0.5rem 0; /* Smaller padding */
+  background-color: var(--navy);
+  color: var(--yellow);
   text-align: center;
-  margin-top: 20px;
+  padding: 0.5rem 0;
+  margin-top: 0; /* Ensure it sits flush with hero */
   font-size: 0.9rem;
+}
+
+footer p {
+  margin: 0;
 }
 
 /* Responsive adjustments */
