@@ -716,8 +716,8 @@ public class MainVerticle extends AbstractVerticle {
                 rezept.setUserId(row.getInteger("user_id"));
                 rezept.setTitle(row.getString("title"));
                 rezept.setDescription(row.getString("description"));
-                rezept.setIngredients(Json.decodeValue(row.getString("ingredients"), List.class));
-                rezept.setInstructions(Json.decodeValue(row.getString("instructions"), List.class));
+                rezept.setIngredients(Arrays.asList(row.getString("ingredients").split(",\\s*")));
+                rezept.setInstructions(Arrays.asList(row.getString("instructions").split(",\\s*")));
                 rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
                 recipes.add(rezept);
               }
