@@ -19,57 +19,51 @@ document.addEventListener("DOMContentLoaded", () => {
       submitButton.disabled = true;
       showLoadingSpinner();
 
+      // Get values from form inputs
       const title = document.getElementById("title").value.trim();
       const description = document.getElementById("description").value.trim();
-      // Split by comma, trim each item
-      const ingredients = document.getElementById("ingredients").value
-        .split(",")
-        .map(item => item.trim());
-      // Split by newline, trim each line
-      const instructions = document.getElementById("instructions").value
-        .split("\n")
-        .map(item => item.trim());
+      const ingredients = document.getElementById("ingredients").value.trim(); // ✅ Now stored as plain text
+      const instructions = document.getElementById("instructions").value.trim(); // ✅ No auto-splitting, stored as plain text
       const imageFile = document.getElementById("imageUpload").files[0];
 
-      if (!imageFile) {
-        console.error("❌ No image selected!");
-        showToast("❌ Please select an image.", "danger");
+      if (!title || !description || !ingredients || !instructions) {
+        showToast("❌ Please fill in all fields.", "danger");
         submitButton.disabled = false;
         hideLoadingSpinner();
         return;
       }
 
+      let imageUrl = "/images/default.png"; // Default image in case upload fails
+
       try {
-        // 1) Upload the Image
-        const imageFormData = new FormData();
-        imageFormData.append("image", imageFile);
+        if (imageFile) {
+          // 1) Upload Image
+          const imageFormData = new FormData();
+          imageFormData.append("image", imageFile);
 
-        const imageResponse = await fetch(`${API_URL}/upload`, {
-          method: "POST",
-          body: imageFormData,
-        });
+          const imageResponse = await fetch(`${API_URL}/upload`, {
+            method: "POST",
+            body: imageFormData,
+          });
 
-        const imageResult = await imageResponse.json();
-        console.log("📤 Image upload response:", imageResult);
+          const imageResult = await imageResponse.json();
+          console.log("📤 Image upload response:", imageResult);
 
-        if (!imageResponse.ok || !imageResult.image_url) {
-          console.error("❌ Image upload failed:", imageResult);
-          showToast(`❌ Image upload failed: ${JSON.stringify(imageResult)}`, "danger");
-          submitButton.disabled = false;
-          hideLoadingSpinner();
-          return;
+          if (imageResponse.ok && imageResult.image_url) {
+            imageUrl = imageResult.image_url;
+          } else {
+            console.error("❌ Image upload failed:", imageResult);
+            showToast(`⚠️ Image upload failed. Using default image.`, "warning");
+          }
         }
-
-        const imageUrl = imageResult.image_url;
-        console.log("🖼️ Image URL received:", imageUrl);
 
         // 2) Send Recipe Data to Backend
         const recipeData = {
           title,
           description,
-          ingredients,
-          instructions,
-          image_url: imageUrl, // Use the URL from the upload response
+          ingredients,  // ✅ Now stored as plain text, no list/array
+          instructions, // ✅ No formatting, stored exactly as user types
+          image_url: imageUrl, // ✅ Use uploaded image or fallback to default
         };
 
         console.log("📜 Sending recipe data:", recipeData);
@@ -126,7 +120,7 @@ function showToast(message, type = "success") {
   const toastBody = toast.querySelector(".toast-body");
 
   toastBody.textContent = message;
-  toast.classList.remove("bg-success", "bg-danger");
+  toast.classList.remove("bg-success", "bg-danger", "bg-warning");
   toast.classList.add(`bg-${type}`);
 
   const toastInstance = new bootstrap.Toast(toast);

@@ -440,7 +440,6 @@ public class MainVerticle extends AbstractVerticle {
     JsonObject body = context.getBodyAsJson();
     int userId = context.user().principal().getInteger("userId");
 
-    // Validate required fields
     if (body == null || !body.containsKey("title") || !body.containsKey("description") ||
       !body.containsKey("ingredients") || !body.containsKey("instructions")) {
       context.response()
@@ -449,22 +448,28 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
 
-    // Extract fields from the request body
+    // Extract values as Strings
     String title = body.getString("title");
     String description = body.getString("description");
-    String ingredients = body.getString("ingredients");
-    String instructions = body.getString("instructions");
+
+    // ✅ Fix: Treat `ingredients` and `instructions` as Strings (not `JsonArray`)
+    String ingredients = body.getString("ingredients");  // No `JsonArray`, just a plain text string
+    String instructions = body.getString("instructions");  // No `JsonArray`, just a plain text string
+
+    // Image URL (set default if not provided)
     String imageUrl = body.containsKey("image_url") ? body.getString("image_url") : "/images/default.png";
 
+    // Debugging log
+    System.out.println("📦 Received recipe data:");
+    System.out.println("Title: " + title);
+    System.out.println("Description: " + description);
+    System.out.println("Ingredients (Plain Text): " + ingredients);
+    System.out.println("Instructions (Plain Text): " + instructions);
+    System.out.println("Image URL: " + imageUrl);
 
-    // Debugging: Log the received data
-    System.out.println("📦 Received recipe data: " + body.encodePrettily());
-    System.out.println("🖼️ Image URL: " + imageUrl);
-
-    // SQL query to insert the recipe into the database
+    // SQL Query to insert the recipe
     String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url) VALUES (?, ?, ?, ?, ?, ?)";
 
-    // Execute the query
     client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl), ar -> {
       if (ar.succeeded()) {
         System.out.println("✅ Recipe successfully saved: " + title);
@@ -479,6 +484,8 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
+
 
 
   private void getAllRecipes(RoutingContext context) {
@@ -500,9 +507,11 @@ public class MainVerticle extends AbstractVerticle {
 
               // Parse ingredients and instructions from text to arrays
               String ingredientsText = row.getString("ingredients");
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*")))); // Trim spaces
               String instructionsText = row.getString("instructions");
-              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(", "))));
-              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(", "))));
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*")))); // Split by comma and optional spaces
+
+
 
               recipes.add(recipe);
             });
@@ -561,8 +570,9 @@ public class MainVerticle extends AbstractVerticle {
               // Parse ingredients and instructions from text to arrays
               String ingredientsText = row.getString("ingredients");
               String instructionsText = row.getString("instructions");
-              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(", "))));
-              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(", "))));
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*")))); // Trim spaces
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*")))); // Split by ". "
+
 
               // Send the response
               context.response()
