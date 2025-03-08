@@ -1,102 +1,112 @@
-/* General Styles */
+/* styles.css */
+
+/* Base styling and typography */
 body {
   font-family: 'Open Sans', sans-serif;
-  background-color: #F5F5F5;
-  color: #2C3E50;
+  background-color: #f8f9fa;
+  color: #343a40;
+  margin: 0;
+  padding: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
+/* Header / Navbar styling */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Hero Section */
+/* Container and spacing */
+.container {
+  padding-top: 70px; /* To avoid overlap with fixed navbar */
+  padding-bottom: 40px;
+}
+
+/* Hero Section (if applicable) */
 .hero-section {
+  background: url('default-image.jpg') center/cover no-repeat;
   height: 400px;
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  color: #fff;
+}
+
+.hero-section .overlay {
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
 }
 
-.overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 20px;
-  border-radius: 10px;
-}
-
-/* Recipe Cards */
-.recipe-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: none;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.recipe-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.recipe-card img {
-  height: 200px;
-  object-fit: cover;
-}
-
-.recipe-card .card-body {
-  background-color: #fff;
-  padding: 20px;
-}
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(45deg, #E74C3C, #F1C40F);
-  border: none;
-  border-radius: 25px;
-  padding: 10px 20px;
-  transition: background 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(45deg, #F1C40F, #E74C3C);
-}
-
-/* Forms */
-.form-control {
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  padding: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.form-control:focus {
-  border-color: #E74C3C;
-  box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
-}
-
-/* Footer */
-footer {
-  margin-top: 50px;
-}
-
-/* Toast Notifications */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-}
-.recipe-image {
-  height: 200px;
-  object-fit: cover;
-  width: 100%;
-}
-
+/* Card styling for recipes */
 .card {
-  transition: transform 0.3s;
+  border: none;
+  border-radius: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 30px;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Card images */
+.card-img-top {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  border-radius: 25px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
+  border-radius: 25px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border: none;
+  border-radius: 25px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+/* Footer styling */
+footer {
+  background-color: #343a40;
+  color: #ffffff;
+  padding: 20px 0;
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-nav {
+    text-align: center;
+  }
 }

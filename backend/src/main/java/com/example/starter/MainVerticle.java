@@ -106,8 +106,14 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/recipes").handler(this::getAllRecipes);
     router.get("/recipes/:id").handler(this::getRecipesById);
 
-    router.put("/recipes/:id").handler(this::updateRecipe);
-    router.delete("/recipes/:id").handler(this::deleteRecipe);
+    router.put("/recipes/:id")
+      .handler(JWTAuthHandler.create(jwtProvider))
+      .handler(this::updateRecipe);
+
+    router.delete("/recipes/:id")
+      .handler(JWTAuthHandler.create(jwtProvider))
+      .handler(this::deleteRecipe);
+
 
     router.get("/users/:userId/recipes").handler(this::getRecipesByUserId);
     router.get("/recipe/search").handler(this::searchRecipes);
@@ -596,14 +602,14 @@ public class MainVerticle extends AbstractVerticle {
           return;
         }
 
-        // Update the recipe
+        // Proceed with update
         String updateQuery = "UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ?, image_url = ? WHERE id = ?";
         Tuple params = Tuple.of(
-          body.getString("title", ""), // Default to empty string if not provided
-          body.getString("description", ""), // Default to empty string if not provided
-          body.getString("ingredients", ""), // Default to empty string if not provided
-          body.getString("instructions", ""), // Default to empty string if not provided
-          body.getString("image_url", "/images/default.png"), // Default image if not provided
+          body.getString("title", ""),
+          body.getString("description", ""),
+          body.getString("ingredients", ""),
+          body.getString("instructions", ""),
+          body.getString("image_url", "/images/default.png"),
           Integer.parseInt(recipeId)
         );
 
@@ -628,6 +634,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
 
+
   // Handler for deleting a recipe
   private void deleteRecipe(RoutingContext routingContext) {
     String recipeId = routingContext.pathParam("id");
@@ -638,6 +645,7 @@ public class MainVerticle extends AbstractVerticle {
       if (checkResult.succeeded() && checkResult.result().size() > 0) {
         int ownerId = checkResult.result().iterator().next().getInteger("user_id");
 
+        // Ensure the user owns the recipe
         if (ownerId != userIdFromToken) {
           routingContext.response().setStatusCode(403).end("Forbidden: You can only delete your own recipes.");
           return;
@@ -656,6 +664,7 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
 
   private void getRecipesByUserId(RoutingContext routingContext) {
     String userId = routingContext.request().getParam("userId");
