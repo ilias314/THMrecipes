@@ -19,11 +19,8 @@ async function login() {
     const result = await response.json();
 
     if (response.ok) {
-      if (!result.token || !result.userId) {
-        throw new Error("Antwort vom Server ist ungültig! `userId` oder `token` fehlt.");
-      }
-
-      localStorage.setItem("token", result.token);
+      localStorage.setItem("accessToken", result.accessToken);
+      localStorage.setItem("refreshToken", result.refreshToken);
       localStorage.setItem("userId", result.userId);
 
       console.log(`🔑 Erfolgreich eingeloggt! userId: ${result.userId}`);
@@ -34,5 +31,18 @@ async function login() {
   } catch (error) {
     console.error("❌ Fehler beim Login:", error);
     document.getElementById("message").textContent = error.message;
+  }
+}
+
+// Example: Fetching user data using the new system
+async function getUserData() {
+  try {
+    const response = await fetchWithAuth(`${API_URL}/users`);
+    if (!response.ok) throw new Error("Failed to fetch user data");
+
+    const data = await response.json();
+    console.log("User Data:", data);
+  } catch (error) {
+    console.error("Error:", error);
   }
 }

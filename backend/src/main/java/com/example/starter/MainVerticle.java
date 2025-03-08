@@ -90,8 +90,14 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/users").handler(this::createUser);
     router.get("/users").handler(this::getAllUsers);
     router.get("/users/:id").handler(this::getUserById);
-    router.put("/users/:id").handler(this::updateUser);
-    router.delete("/users/:id").handler(this::deleteUser);
+    router.put("/users/:id")
+      .handler(JWTAuthHandler.create(jwtProvider))
+      .handler(this::updateUser);
+
+    router.delete("/users/:id")
+      .handler(JWTAuthHandler.create(jwtProvider))
+      .handler(this::deleteUser);
+
 
     // Recipe routes
     JWTAuthHandler jwtAuthHandler = JWTAuthHandler.create(jwtProvider);
@@ -126,6 +132,8 @@ public class MainVerticle extends AbstractVerticle {
     router.put("/comments/:id").handler(this::updateComment);
     router.delete("/comments/:id").handler(this::deleteComment);
     router.get("/users/:userId/comments").handler(this::getUserComments);
+
+    router.post("/refresh-token").handler(this::refreshToken);
 
     router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("images")).handler(this::uploadImage);
 
@@ -230,51 +238,34 @@ public class MainVerticle extends AbstractVerticle {
 
   private void updateUser(RoutingContext context) {
     String id = context.pathParam("id");
-
-    // Check if the user is authenticated
     if (context.user() == null) {
       context.response().setStatusCode(401).end("Unauthorized: User not authenticated.");
       return;
     }
-
-    // Safely retrieve the user ID from the principal
     JsonObject principal = context.user().principal();
     if (principal == null || !principal.containsKey("userId")) {
       context.response().setStatusCode(401).end("Unauthorized: User principal is invalid.");
       return;
     }
-
     Integer userIdFromToken = principal.getInteger("userId");
-
-    // Check if user is authorized to perform the action
     if (!userIdFromToken.equals(Integer.parseInt(id))) {
       context.response().setStatusCode(403).end("Forbidden: You can only update your own profile.");
       return;
     }
-
-    // Validate request body
     JsonObject body = context.getBodyAsJson();
     if (body == null || !body.containsKey("username") || !body.containsKey("email") || !body.containsKey("password")) {
       context.response().setStatusCode(400).end("❌ Fehlende Daten");
       return;
     }
-
-    // Validate email format
     if (!isValidEmail(body.getString("email"))) {
       context.response().setStatusCode(400).end("Invalid email format.");
       return;
     }
-
-    // Validate password strength
     if (!isValidPassword(body.getString("password"))) {
       context.response().setStatusCode(400).end("Password must contain at least one uppercase letter and two digits.");
       return;
     }
-
-    // Hash the new password
     String hashedPassword = BCrypt.hashpw(body.getString("password"), BCrypt.gensalt());
-
-    // Execute the database query
     String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
     client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), hashedPassword, Integer.parseInt(id)), ar -> {
       if (ar.succeeded() && ar.result().rowCount() > 0) {
@@ -292,10 +283,14 @@ public class MainVerticle extends AbstractVerticle {
 
   // 📌 DELETE: Benutzer löschen
   private void deleteUser(RoutingContext context) {
+    // Defensive check: if user is not set, respond with an unauthorized error.
+    if (context.user() == null) {
+      context.response().setStatusCode(401).end("Unauthorized: User not authenticated.");
+      return;
+    }
+
     String id = context.pathParam("id");
     Integer userIdFromToken = context.user().principal().getInteger("userId");
-
-    // Check if the logged-in user is trying to delete their own account
     if (!userIdFromToken.equals(Integer.parseInt(id))) {
       context.response().setStatusCode(403).end("Forbidden: You can only delete your own account.");
       return;
@@ -305,58 +300,49 @@ public class MainVerticle extends AbstractVerticle {
     String deleteRecipesQuery = "DELETE FROM recipes WHERE user_id = ?";
     String deleteUserQuery = "DELETE FROM users WHERE id = ?";
 
-    // Get a connection from the pool
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
-
-        // Begin a transaction
         connection.begin(tx -> {
           if (tx.succeeded()) {
             // First, delete all recipes associated with the user
             connection.preparedQuery(deleteRecipesQuery).execute(Tuple.of(Integer.parseInt(id)), ar -> {
               if (ar.succeeded()) {
-              if (ar.succeeded())
-                // If recipes are deleted successfully, delete the user
+                // Then, delete the user
                 connection.preparedQuery(deleteUserQuery).execute(Tuple.of(Integer.parseInt(id)), ar2 -> {
                   if (ar2.succeeded()) {
-                    // Commit the transaction if both deletions succeed
                     tx.result().commit(commit -> {
                       if (commit.succeeded()) {
-                        context.response().setStatusCode(204).end(); // 204 No Content
+                        context.response().setStatusCode(204).end();
                       } else {
-                        // Rollback if commit fails
                         tx.result().rollback();
                         context.response().setStatusCode(500).end("Failed to commit transaction.");
                       }
-                      connection.close(); // Always close the connection
+                      connection.close();
                     });
                   } else {
-                    // Rollback if user deletion fails
                     tx.result().rollback();
                     context.response().setStatusCode(500).end("Failed to delete user.");
-                    connection.close(); // Always close the connection
+                    connection.close();
                   }
                 });
               } else {
-                // Rollback if recipe deletion fails
                 tx.result().rollback();
                 context.response().setStatusCode(500).end("Failed to delete associated recipes.");
-                connection.close(); // Always close the connection
+                connection.close();
               }
             });
           } else {
-            // Handle transaction begin failure
             context.response().setStatusCode(500).end("Failed to begin transaction.");
-            connection.close(); // Always close the connection
+            connection.close();
           }
         });
       } else {
-        // Handle connection failure
         context.response().setStatusCode(500).end("Failed to get database connection.");
       }
     });
   }
+
 
   // ✅ Benutzer registrieren
   private void register(RoutingContext context) {
@@ -395,12 +381,27 @@ public class MainVerticle extends AbstractVerticle {
         String storedPassword = row.getString("password");
 
         if (BCrypt.checkpw(body.getString("password"), storedPassword)) {
-          String token = jwtProvider.generateToken(new JsonObject().put("userId", row.getInteger("id")),
-            new JWTOptions().setExpiresInMinutes(60));
+          int userId = row.getInteger("id");
+
+          // Generate Access Token (short-lived)
+          String accessToken = jwtProvider.generateToken(
+            new JsonObject().put("userId", userId),
+            new JWTOptions().setExpiresInMinutes(15)  // Shorter expiration time
+          );
+
+          // Generate Refresh Token (long-lived)
+          String refreshToken = jwtProvider.generateToken(
+            new JsonObject().put("userId", userId),
+            new JWTOptions().setExpiresInMinutes(1440)  // 24 hours
+          );
 
           context.response()
             .putHeader("Content-Type", "application/json")
-            .end(new JsonObject().put("token", token).put("userId", row.getInteger("id")).encode());
+            .end(new JsonObject()
+              .put("accessToken", accessToken)
+              .put("refreshToken", refreshToken)
+              .put("userId", userId)
+              .encode());
         } else {
           context.response().setStatusCode(401).end("{\"message\": \"Falsche Zugangsdaten\"}");
         }
@@ -409,6 +410,7 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
 
 
   // ✅ Benutzer-Logout (nur Token löschen)
@@ -1340,6 +1342,34 @@ public class MainVerticle extends AbstractVerticle {
           context.response().setStatusCode(500).end("❌ Fehler beim Speichern des Bildes.");
         }
       });
+    });
+  }
+  private void refreshToken(RoutingContext context) {
+    JsonObject body = context.getBodyAsJson();
+
+    if (body == null || !body.containsKey("refreshToken")) {
+      context.response().setStatusCode(400).end(new JsonObject().put("message", "Refresh Token is required").encode());
+      return;
+    }
+
+    String refreshToken = body.getString("refreshToken");
+
+    // Verify the refresh token
+    jwtProvider.authenticate(new JsonObject().put("token", refreshToken), authResult -> {
+      if (authResult.succeeded()) {
+        JsonObject userPrincipal = authResult.result().principal();
+        int userId = userPrincipal.getInteger("userId");
+
+        // Generate a new Access Token
+        String newAccessToken = jwtProvider.generateToken(
+          new JsonObject().put("userId", userId),
+          new JWTOptions().setExpiresInMinutes(15)
+        );
+
+        context.response().setStatusCode(200).end(new JsonObject().put("accessToken", newAccessToken).encode());
+      } else {
+        context.response().setStatusCode(401).end(new JsonObject().put("message", "Invalid refresh token").encode());
+      }
     });
   }
 

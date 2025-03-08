@@ -20,15 +20,10 @@ async function login() {
     const result = await response.json();
 
     if (response.ok) {
-      if (!result.token || !result.userId) {
-        throw new Error("Invalid response from server: token or userId missing.");
-      }
-
-      // Save token and userId in localStorage
-      localStorage.setItem("token", result.token);
+      localStorage.setItem("accessToken", result.accessToken);
+      localStorage.setItem("refreshToken", result.refreshToken);
       localStorage.setItem("userId", result.userId);
 
-      console.log("Login successful! Redirecting to home page...");
       window.location.href = "index.html";
     } else {
       throw new Error(result.message || "Login failed!");
@@ -39,41 +34,71 @@ async function login() {
   }
 }
 
-// Register Function
-async function register() {
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  if (!username || !email || !password) {
-    alert("Please fill in all fields!");
-    return;
+// Refresh Token Function
+async function refreshToken() {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) {
+    logout();
+    return null;
   }
 
   try {
-    const response = await fetch(`${API_URL}/register`, {
+    const response = await fetch(`${API_URL}/refresh-token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ refreshToken }),
     });
 
-    const result = await response.text();
+    const result = await response.json();
 
     if (response.ok) {
-      alert("Registration successful! Redirecting to login page...");
-      window.location.href = "login.html";
+      localStorage.setItem("accessToken", result.accessToken);
+      return result.accessToken;
     } else {
-      throw new Error(result || "Registration failed!");
+      logout();
+      return null;
     }
   } catch (error) {
-    console.error("❌ Error during registration:", error);
-    alert("Registration failed!");
+    console.error("Error refreshing token:", error);
+    logout();
+    return null;
   }
+}
+
+// Fetch API with Automatic Token Refresh
+async function fetchWithAuth(url, options = {}) {
+  let accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    accessToken = await refreshToken();
+    if (!accessToken) {
+      return;
+    }
+  }
+
+  options.headers = {
+    ...options.headers,
+    "Authorization": `Bearer ${accessToken}`
+  };
+
+  let response = await fetch(url, options);
+
+  // If unauthorized, try refreshing the token
+  if (response.status === 401) {
+    accessToken = await refreshToken();
+    if (!accessToken) return;
+
+    options.headers["Authorization"] = `Bearer ${accessToken}`;
+    response = await fetch(url, options);
+  }
+
+  return response;
 }
 
 // Logout Function
 function logout() {
-  localStorage.removeItem("token");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   localStorage.removeItem("userId");
   window.location.href = "login.html";
 }

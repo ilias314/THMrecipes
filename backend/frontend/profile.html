@@ -29,14 +29,59 @@
           <h4>Profile</h4>
         </div>
         <div class="card-body">
+          <!-- Profile Information -->
           <div id="profileInfo"></div>
-          <h3>Your Recipes</h3>
+
+          <!-- Buttons for Edit and Delete Profile -->
+          <div class="mt-3">
+            <button class="btn btn-primary" onclick="openEditProfileModal()">Edit Profile</button>
+            <button class="btn btn-danger" onclick="deleteProfile()">Delete Profile</button>
+          </div>
+
+          <!-- User Recipes -->
+          <h3 class="mt-4">Your Recipes</h3>
           <div id="userRecipes"></div>
-          <h3>Your Comments</h3>
+
+          <!-- User Comments -->
+          <h3 class="mt-4">Your Comments</h3>
           <div id="userComments"></div>
-          <h3>Your Ratings</h3>
+
+          <!-- User Ratings -->
+          <h3 class="mt-4">Your Ratings</h3>
           <div id="userRatings"></div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProfileForm">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="password">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="updateProfile()">Save changes</button>
       </div>
     </div>
   </div>
