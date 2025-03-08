@@ -54,6 +54,17 @@ public class MainVerticle extends AbstractVerticle {
         .setAlgorithm("HS256")
         .setBuffer("geheimes_jwt_schluessel")));
 
+    vertx.fileSystem().exists("images", existsRes -> {
+      if (!existsRes.succeeded() || !existsRes.result()) {
+        vertx.fileSystem().mkdir("images", mkdirRes -> {
+          if (mkdirRes.failed()) {
+            System.err.println("Could not create images directory: " + mkdirRes.cause().getMessage());
+          }
+        });
+      }
+    });
+
+
     // 📌 Verbindung testen
     client.getConnection(ar -> {
       if (ar.succeeded()) {
@@ -443,7 +454,7 @@ public class MainVerticle extends AbstractVerticle {
     String description = body.getString("description");
     String ingredients = body.getString("ingredients");
     String instructions = body.getString("instructions");
-    String imageUrl = body.containsKey("imageUrl") ? body.getString("imageUrl") : "/images/default.png";
+    String imageUrl = body.containsKey("image_url") ? body.getString("image_url") : "/images/default.png";
 
 
     // Debugging: Log the received data

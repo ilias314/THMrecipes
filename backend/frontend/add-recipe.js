@@ -1,8 +1,9 @@
+// add-recipe.js
 const API_URL = "http://localhost:8080";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const token = localStorage.getItem("token");
-
+  // Check for a valid token in localStorage
+  const token = localStorage.getItem("accessToken");
   if (!token) {
     alert("Please log in first!");
     window.location.href = "login.html";
@@ -10,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const form = document.getElementById("addRecipeForm");
-
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -21,8 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const title = document.getElementById("title").value.trim();
       const description = document.getElementById("description").value.trim();
-      const ingredients = document.getElementById("ingredients").value.split(",").map(item => item.trim());
-      const instructions = document.getElementById("instructions").value.split("\n").map(item => item.trim());
+      // Split by comma, trim each item
+      const ingredients = document.getElementById("ingredients").value
+        .split(",")
+        .map(item => item.trim());
+      // Split by newline, trim each line
+      const instructions = document.getElementById("instructions").value
+        .split("\n")
+        .map(item => item.trim());
       const imageFile = document.getElementById("imageUpload").files[0];
 
       if (!imageFile) {
@@ -33,10 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      console.log("📸 Selected image:", imageFile);
-
       try {
-        // Step 1: Upload the Image
+        // 1) Upload the Image
         const imageFormData = new FormData();
         imageFormData.append("image", imageFile);
 
@@ -59,13 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const imageUrl = imageResult.image_url;
         console.log("🖼️ Image URL received:", imageUrl);
 
-        // Step 2: Send Recipe Data to Backend
+        // 2) Send Recipe Data to Backend
         const recipeData = {
           title,
           description,
           ingredients,
           instructions,
-          imageUrl, // Using the received image URL
+          image_url: imageUrl, // Use the URL from the upload response
         };
 
         console.log("📜 Sending recipe data:", recipeData);
@@ -86,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
           showToast("✅ Recipe added successfully!", "success");
           setTimeout(() => {
             window.location.href = "recipes.html"; // Redirect to recipes page
-          }, 2000);
+          }, 1500);
         } else {
           console.error("❌ Recipe creation failed:", recipeResult);
           showToast(`❌ Failed to add recipe: ${recipeResult.message}`, "danger");
@@ -102,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 🌀 Show Loading Spinner
+// Show a loading spinner
 function showLoadingSpinner() {
   document.getElementById("message").innerHTML = `
     <div class="spinner-border text-primary" role="status">
@@ -111,12 +115,12 @@ function showLoadingSpinner() {
   `;
 }
 
-// ❌ Hide Loading Spinner
+// Hide the loading spinner
 function hideLoadingSpinner() {
   document.getElementById("message").innerHTML = "";
 }
 
-// 🔔 Show Toast Notification
+// Show a toast notification
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
   const toastBody = toast.querySelector(".toast-body");
