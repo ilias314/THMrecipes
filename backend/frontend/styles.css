@@ -1,72 +1,145 @@
-/* Color Palette (example: Navy, Yellow, Beige) */
 :root {
-  --navy:   #001f3f;
-  --yellow: #FFDC00;
-  --beige:  #F5F5DC;
+  --navy:   #001f3f;    /* Dark Blue */
+  --yellow: #FFDC00;    /* Yellow */
+  --beige:  #F5F5DC;    /* Beige */
 }
 
-/* Base styling */
+/* === Background Image Utility for Pages (e.g., login/register) === */
+.bg-image {
+  background: url("default-image.jpg") center/cover no-repeat;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Overlay on top of background image */
+.bg-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 31, 63, 0.6); /* 60% Navy overlay */
+  z-index: -1;
+}
+
+/* === Global Base === */
 body {
   font-family: 'Open Sans', sans-serif;
-  background-color: var(--beige);
-  color: var(--navy);
   margin: 0;
   padding: 0;
+  /* Default background for pages without bg-image */
+  background-color: var(--beige);
+  color: var(--navy);
 }
 
-/* Navbar */
+/* For pages that need to stretch full height and center content */
+.full-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Navbar (Header) === */
 .navbar {
   background-color: var(--navy);
-  padding: 0.3rem 1rem;
-  min-height: 50px; /* Keep track of this height for hero calc() */
+  padding: 0.3rem 1rem;  /* Compact vertical padding */
+  min-height: 50px;
   box-shadow: 0 2px 4px rgba(0, 31, 63, 0.5);
 }
-
 .navbar .navbar-brand,
 .navbar .nav-link {
   color: var(--yellow);
 }
-
 .navbar .nav-link:hover {
   color: var(--beige);
 }
 
-/* Hero Section */
+/* === Footer === */
+footer {
+  background-color: var(--navy);
+  color: var(--yellow);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  margin-top: 0;
+}
+footer p {
+  margin: 0;
+}
+
+/* === Container Spacing === */
+.container {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+
+/* === Hero Section (for index page) === */
 .hero-section {
-  /* Make the hero fill the screen minus the navbar height */
-  min-height: calc(100vh - 50px); /* 50px = .navbar min-height */
   background: url("default-image.jpg") center/cover no-repeat;
+  min-height: calc(100vh - 50px); /* Full viewport minus navbar */
   position: relative;
+  margin-top: 50px; /* To account for fixed navbar */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 2rem;
   color: var(--yellow);
-  margin-top: 50px; /* Matches navbar height */
 }
-
-/* Fading overlay */
 .hero-section .overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: var(--navy);
   opacity: 0;
   animation: fadeIn 1s forwards;
 }
-
 @keyframes fadeIn {
   to {
     opacity: 0.6;
   }
 }
-
 .hero-section .hero-text {
   position: relative;
   z-index: 1;
 }
 
-/* Button styling */
+/* === Card Styling (for forms, recipes, etc.) === */
+.card {
+  background-color: rgba(245, 245, 220, 0.9); /* Slightly transparent beige */
+  color: var(--navy);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 31, 63, 0.4);
+  margin-bottom: 30px;
+}
+
+.card-header {
+  background-color: var(--navy);
+  color: var(--yellow);
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.card-img-top {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* === Button Styling === */
 .btn-primary {
   background-color: var(--yellow);
   border: none;
@@ -75,27 +148,21 @@ body {
   color: var(--navy);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-
 .btn-primary:hover {
   background-color: var(--beige);
   color: var(--navy);
 }
 
-/* Footer */
-footer {
-  background-color: var(--navy);
-  color: var(--yellow);
-  text-align: center;
-  padding: 0.5rem 0;
-  margin-top: 0; /* Ensure it sits flush with hero */
-  font-size: 0.9rem;
+.custom-card-header {
+  background-color: var(--navy); /* Use your navy variable (#001f3f) */
+  color: var(--yellow);           /* Use your yellow variable (#FFDC00) */
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
-footer p {
-  margin: 0;
-}
 
-/* Responsive adjustments */
+/* === Responsive Adjustments === */
 @media (max-width: 768px) {
   .navbar-nav {
     text-align: center;
