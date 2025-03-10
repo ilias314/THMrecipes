@@ -124,10 +124,12 @@ async function displayUserRecipes(recipes) {
       const recipe = recipes[j];
 
       // Handle image
-      let imageUrl = recipe.image_url || "default-image.jpg";
+      let imageUrl = recipe.imageUrl || "/images/default-image.jpg";
       if (!imageUrl.startsWith("http") && !imageUrl.startsWith("/")) {
         imageUrl = `/images/${imageUrl}`;
       }
+
+
 
       // We'll allow editing or deleting from recipe detail or from a prompt
       // (Optional) If you want direct editing here, you can replicate the code from recipes.js

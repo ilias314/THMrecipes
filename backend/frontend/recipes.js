@@ -231,3 +231,12 @@ async function deleteRecipe(recipeId) {
     alert(error.message);
   }
 }
+// Updated Logout Function in auth.js
+function logout(event) {
+  if (event) event.preventDefault();
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}
+
