@@ -536,3 +536,10 @@ async function deleteRating(ratingId) {
     alert(error.message);
   }
 }
+function logout(event) {
+  if (event) event.preventDefault();
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}

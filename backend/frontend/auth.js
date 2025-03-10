@@ -104,4 +104,13 @@ function logout(event) {
   localStorage.removeItem("userId");
   window.location.href = "login.html";
 }
+function redirectHome() {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    window.location.href = "recipes.html";
+  } else {
+    window.location.href = "index.html";
+  }
+}
+
 

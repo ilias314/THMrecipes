@@ -219,16 +219,24 @@ function getStarsHtml(average) {
 }
 
 // Display user comments
+// Display user comments
 function displayUserComments(comments) {
   const userComments = document.getElementById("userComments");
   userComments.innerHTML = "";
   if (!comments || !Array.isArray(comments)) return;
 
   comments.forEach((comment) => {
+    // Use either recipeId or recipe_id depending on your API response
+    const recipeId = comment.recipeId || comment.recipe_id;
     const commentDiv = document.createElement("div");
     commentDiv.className = "comment card p-2 mb-2";
     commentDiv.innerHTML = `
-      <strong>${comment.recipeTitle}</strong>
+      <div class="d-flex justify-content-between align-items-center">
+        <strong>${comment.recipeTitle}</strong>
+        <a href="recipe-detail.html?id=${recipeId}" class="btn btn-sm btn-primary">
+        <i class="fas fa-eye"></i>
+</a>
+      </div>
       <p>${comment.content}</p>
       <small>${comment.createdAt}</small>
     `;
@@ -236,6 +244,8 @@ function displayUserComments(comments) {
   });
 }
 
+
+// Display user ratings
 // Display user ratings
 function displayUserRatings(ratings) {
   const userRatings = document.getElementById("userRatings");
@@ -243,16 +253,24 @@ function displayUserRatings(ratings) {
   if (!ratings || !Array.isArray(ratings)) return;
 
   ratings.forEach((rating) => {
+    // Use either recipeId or recipe_id depending on your API response
+    const recipeId = rating.recipeId || rating.recipe_id;
     const ratingDiv = document.createElement("div");
     ratingDiv.className = "rating card p-2 mb-2";
     ratingDiv.innerHTML = `
-      <strong>${rating.recipeTitle}</strong>
+      <div class="d-flex justify-content-between align-items-center">
+        <strong>${rating.recipeTitle}</strong>
+        <a href="recipe-detail.html?id=${recipeId}" class="btn btn-sm btn-primary">
+          <i class="fas fa-eye"></i>
+        </a>
+      </div>
       <p>Rating: ${rating.rating}</p>
       <small>${rating.createdAt}</small>
     `;
     userRatings.appendChild(ratingDiv);
   });
 }
+
 
 // Open edit profile modal
 function openEditProfileModal() {
