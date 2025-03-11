@@ -27,7 +27,7 @@
 body {
   font-family: 'Open Sans', sans-serif;
   margin: 0;
-  padding: 0;
+  padding-top: 30px;
   /* Default background for pages without bg-image */
   background-color: var(--beige);
   color: var(--navy);
@@ -48,19 +48,47 @@ body {
 }
 
 /* === Navbar (Header) === */
+/* Modernized Navbar */
 .navbar {
-  background-color: var(--navy);
-  padding: 0.2rem 1rem;  /* Reduced padding */
-  min-height: 40px;      /* Reduced minimum height */
-  box-shadow: 0 2px 4px rgba(0, 31, 63, 0.5);
+  /* Subtle gradient going from your navy to a slightly different shade */
+  background: linear-gradient(135deg, var(--navy) 0%, #002b4f 100%);
+  padding: 0.75rem 1.5rem;      /* A bit more vertical spacing */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
 }
-.navbar .navbar-brand,
-.navbar .nav-link {
+
+.navbar .navbar-brand {
+  font-size: 1.6rem;            /* Larger brand text */
+  font-weight: 700;            /* Make it bold */
   color: var(--yellow);
+  text-transform: uppercase;    /* Optional all-caps style */
+  letter-spacing: 1px;          /* Slight spacing for a modern feel */
+  margin-right: 2rem;           /* Space between brand and nav links */
 }
-.navbar .nav-link:hover {
+
+.navbar .navbar-nav .nav-link {
+  color: var(--yellow);
+  font-weight: 500;
+  margin-left: 1rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border-radius: 4px;          /* Slight rounding if hovered background is used */
+}
+
+.navbar .navbar-nav .nav-link:hover {
   color: var(--beige);
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle highlight on hover */
+  text-decoration: none;       /* Remove underline */
 }
+
+.navbar .navbar-toggler {
+  border: none;                /* Hide default button border */
+}
+
+.navbar .navbar-toggler:focus,
+.navbar .navbar-toggler:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle hover for toggler on mobile */
+}
+
 
 /* === Footer === */
 footer {
