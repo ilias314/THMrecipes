@@ -9,7 +9,8 @@ public class Rezept {
   private String description;
   private List<String> ingredients;
   private List<String> instructions;
-  private String createdAt;private String imageUrl;
+  private String createdAt;
+  private String imageUrl;
 
   // Getters and setters
   public int getId() { return id; }
@@ -33,5 +34,8 @@ public class Rezept {
   public String getCreatedAt() { return createdAt; }
   public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-
+  public String getImageUrl() { return imageUrl; }
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
 }

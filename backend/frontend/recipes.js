@@ -51,11 +51,16 @@ async function displayRecipes(recipes) {
         imageUrl = `/images/${imageUrl}`;
       }
 
+      // Only display Edit/Delete if user owns the recipe
       let extraButtons = "";
       if (parseInt(recipe.user_id, 10) === loggedInUserId) {
         extraButtons = `
-          <button class="btn btn-secondary me-1" onclick="editRecipe(${recipe.id})">Edit</button>
-          <button class="btn btn-danger" onclick="deleteRecipe(${recipe.id})">Delete</button>
+          <button class="btn btn-warning me-1" onclick="editRecipe(${recipe.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-danger" onclick="deleteRecipe(${recipe.id})">
+            <i class="fas fa-trash"></i>
+          </button>
         `;
       }
 
@@ -73,9 +78,16 @@ async function displayRecipes(recipes) {
               <p class="card-text">${recipe.description || ""}</p>
               <!-- Star rating container -->
               <div id="avgRating-${recipe.id}" class="mb-2"></div>
+
+              <!-- "View Recipe" and "Add to Wishlist" both share .btn-primary style -->
               <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">
                 View Recipe
               </a>
+              <button class="btn btn-primary mb-2" onclick="addRecipeToWishlist(${recipe.id})">
+                <i class="fas fa-heart"></i>
+              </button>
+
+              <!-- Edit/Delete as icons for the owner only -->
               ${extraButtons}
             </div>
           </div>
@@ -91,6 +103,9 @@ async function displayRecipes(recipes) {
     await fetchAndDisplayAverageRating(recipe.id);
   }
 }
+
+
+
 
 async function fetchAndDisplayAverageRating(recipeId) {
   try {
@@ -239,4 +254,38 @@ function logout(event) {
   localStorage.removeItem("userId");
   window.location.href = "login.html";
 }
+async function addRecipeToWishlist(recipeId) {
+  const token = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId");
+
+  if (!token || !userId) {
+    alert("Please log in first!");
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/wishlist`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ user_id: parseInt(userId, 10), recipe_id: recipeId })
+    });
+
+    if (response.ok) {
+      alert("Added to wishlist!");
+    } else if (response.status === 409) {
+      alert("Recipe is already in your wishlist.");
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to add to wishlist");
+    }
+  } catch (error) {
+    console.error("Error adding to wishlist:", error);
+    alert(error.message);
+  }
+}
+
 

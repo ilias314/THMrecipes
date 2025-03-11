@@ -154,6 +154,12 @@ public class MainVerticle extends AbstractVerticle {
 
     router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("images")).handler(this::uploadImage);
 
+    // Wishlist routes
+    router.post("/wishlist").handler(this::addToWishlist);
+    router.get("/wishlist/:user_id").handler(this::getWishlist);
+    router.delete("/wishlist/:user_id/:recipe_id").handler(this::removeFromWishlist);
+
+
 
 
 
@@ -689,8 +695,6 @@ public class MainVerticle extends AbstractVerticle {
 
   private void getRecipesByUserId(RoutingContext routingContext) {
     String userId = routingContext.request().getParam("userId");
-
-    // Validate the user ID
     if (userId == null || userId.isEmpty()) {
       routingContext.response()
         .setStatusCode(400)
@@ -698,18 +702,16 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
 
-    // Query the database for recipes associated with the user ID
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
         connection.preparedQuery("SELECT * FROM recipes WHERE user_id = ?")
           .execute(Tuple.of(Integer.parseInt(userId)), ar -> {
-            connection.close(); // Always close the connection
+            connection.close();
             if (ar.succeeded()) {
               RowSet<Row> rows = ar.result();
               List<Rezept> recipes = new ArrayList<>();
 
-              // Map rows to Rezept objects
               for (Row row : rows) {
                 Rezept rezept = new Rezept();
                 rezept.setId(row.getInteger("id"));
@@ -718,24 +720,30 @@ public class MainVerticle extends AbstractVerticle {
                 rezept.setDescription(row.getString("description"));
                 rezept.setIngredients(Arrays.asList(row.getString("ingredients").split(",\\s*")));
                 rezept.setInstructions(Arrays.asList(row.getString("instructions").split(",\\s*")));
+                rezept.setImageUrl(row.getString("image_url"));
                 rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
+
+                // NEW: Set the image URL from the DB column "image_url"
+
+
                 recipes.add(rezept);
               }
 
-              // Return the recipes as JSON
               routingContext.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
                 .end(Json.encodePrettily(recipes));
             } else {
-              routingContext.fail(500); // Internal server error
+              routingContext.fail(500);
             }
           });
       } else {
-        routingContext.fail(conn.cause()); // Connection failed
+        routingContext.fail(conn.cause());
       }
     });
   }
+
+
   private void searchRecipes(RoutingContext context) {
     // Get the search query from the request
     List<String> queryParams = context.queryParam("q");
@@ -1396,7 +1404,7 @@ public class MainVerticle extends AbstractVerticle {
         // Generate a new Access Token
         String newAccessToken = jwtProvider.generateToken(
           new JsonObject().put("userId", userId),
-          new JWTOptions().setExpiresInMinutes(15)
+          new JWTOptions().setExpiresInMinutes(60)
         );
 
         context.response().setStatusCode(200).end(new JsonObject().put("accessToken", newAccessToken).encode());
@@ -1404,6 +1412,111 @@ public class MainVerticle extends AbstractVerticle {
         context.response().setStatusCode(401).end(new JsonObject().put("message", "Invalid refresh token").encode());
       }
     });
+  }
+  // Rezept zur Wunschliste hinzufügen
+  private void addToWishlist(RoutingContext ctx) {
+    JsonObject body = ctx.body().asJsonObject();
+
+    if (!body.containsKey("user_id") || !body.containsKey("recipe_id")) {
+      ctx.response()
+        .setStatusCode(400)
+        .putHeader("Content-Type", "application/json")
+        .end(new JsonObject().put("error", "Missing user_id or recipe_id").encode());
+      return;
+    }
+
+    int userId = body.getInteger("user_id");
+    int recipeId = body.getInteger("recipe_id");
+
+    // Zuerst prüfen, ob das Rezept bereits in der Wishlist ist
+    String checkQuery = "SELECT COUNT(*) AS count FROM wishlist WHERE user_id = ? AND recipe_id = ?";
+
+    client.preparedQuery(checkQuery).execute(Tuple.of(userId, recipeId), checkResult -> {
+      if (checkResult.succeeded()) {
+        int count = checkResult.result().iterator().next().getInteger("count");
+
+        if (count > 0) {
+          // Rezept ist bereits in der Wishlist
+          ctx.response()
+            .setStatusCode(409) // Conflict-Statuscode
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("message", "Item is already in your wishlist").encode());
+        } else {
+          // Rezept zur Wishlist hinzufügen
+          String insertQuery = "INSERT INTO wishlist (user_id, recipe_id) VALUES (?, ?)";
+          client.preparedQuery(insertQuery).execute(Tuple.of(userId, recipeId))
+            .onSuccess(res -> ctx.response()
+              .setStatusCode(201)
+              .putHeader("Content-Type", "application/json")
+              .end(new JsonObject().put("message", "Added to wishlist").encode()))
+            .onFailure(err -> {
+              err.printStackTrace();
+              ctx.response()
+                .setStatusCode(500)
+                .putHeader("Content-Type", "application/json")
+                .end(new JsonObject().put("error", err.getMessage()).encode());
+            });
+        }
+      } else {
+        ctx.response()
+          .setStatusCode(500)
+          .putHeader("Content-Type", "application/json")
+          .end(new JsonObject().put("error", checkResult.cause().getMessage()).encode());
+      }
+    });
+  }
+
+
+  // Wunschliste für einen Benutzer abrufen
+  private void getWishlist(RoutingContext ctx) {
+    String userIdParam = ctx.pathParam("user_id");
+
+    try {
+      int userId = Integer.parseInt(userIdParam);
+
+      String query = "SELECT r.id, r.title, r.description, r.image_url FROM wishlist w JOIN recipes r ON w.recipe_id = r.id WHERE w.user_id = ?";
+      client.preparedQuery(query).execute(Tuple.of(userId), res -> {
+        if (res.succeeded()) {
+          JsonArray wishlist = new JsonArray();
+          for (Row row : res.result()) {
+            wishlist.add(new JsonObject()
+              .put("id", row.getInteger("id"))
+              .put("title", row.getString("title"))
+              .put("description", row.getString("description"))
+              .put("image_url", row.getString("image_url"))
+            );
+          }
+          ctx.response().putHeader("content-type", "application/json").end(wishlist.encode());
+        } else {
+          ctx.response().setStatusCode(500).end(new JsonObject().put("error", res.cause().getMessage()).encode());
+        }
+      });
+    } catch (NumberFormatException e) {
+      ctx.response().setStatusCode(400).end(new JsonObject().put("message", "Invalid user ID").encode());
+    }
+  }
+
+  // Rezept aus Wunschliste entfernen
+
+  private void removeFromWishlist(RoutingContext ctx) {
+    String userIdParam = ctx.pathParam("user_id");
+    String recipeIdParam = ctx.pathParam("recipe_id");
+
+    try {
+      int userId = Integer.parseInt(userIdParam);
+      int recipeId = Integer.parseInt(recipeIdParam);
+
+      String query = "DELETE FROM wishlist WHERE user_id = ? AND recipe_id = ?";
+      client.preparedQuery(query).execute(Tuple.of(userId, recipeId), res -> {
+        if (res.succeeded()) {
+          ctx.response().setStatusCode(200).end(new JsonObject().put("message", "Removed from wishlist").encode());
+        } else {
+          ctx.response().setStatusCode(500).end(new JsonObject().put("error", res.cause().getMessage()).encode());
+        }
+      });
+    } catch (NumberFormatException e) {
+      ctx.response().setStatusCode(400).end(new JsonObject().put("message", "Invalid user ID or recipe ID").encode());
+    }
   }
 
 

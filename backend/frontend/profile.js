@@ -111,32 +111,29 @@ function displayProfile(user) {
 
 // Display user recipes in the same layout as recipes page
 async function displayUserRecipes(recipes) {
+  console.log("Received recipes in profile:", recipes); // Log to verify JSON structure
   const userRecipesContainer = document.getElementById("userRecipes");
   if (!userRecipesContainer) return;
   userRecipesContainer.innerHTML = "";
 
-  // We will group 3 cards per row
+  // Group 3 recipes per row
   for (let i = 0; i < recipes.length; i += 3) {
     const row = document.createElement("div");
     row.className = "row mb-4";
 
     for (let j = i; j < i + 3 && j < recipes.length; j++) {
       const recipe = recipes[j];
-
-      // Handle image
-      let imageUrl = recipe.imageUrl || "/images/default-image.jpg";
+      // Use either image_url or imageUrl
+      let imageUrl = recipe.image_url || recipe.imageUrl || "default-image.jpg";
+      console.log("Recipe imageUrl:", imageUrl);  // Log each image URL
       if (!imageUrl.startsWith("http") && !imageUrl.startsWith("/")) {
         imageUrl = `/images/${imageUrl}`;
       }
 
-
-
-      // We'll allow editing or deleting from recipe detail or from a prompt
-      // (Optional) If you want direct editing here, you can replicate the code from recipes.js
       const recipeCard = `
         <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
-            <img
+             <img
               src="${imageUrl}"
               class="card-img-top recipe-image"
               alt="${recipe.title}"
@@ -145,7 +142,6 @@ async function displayUserRecipes(recipes) {
             <div class="card-body">
               <h5 class="card-title">${recipe.title}</h5>
               <p class="card-text">${recipe.description || ""}</p>
-              <!-- Container for average rating -->
               <div id="avgRating-user-${recipe.id}" class="mb-2"></div>
               <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">
                 View Recipe
@@ -159,11 +155,12 @@ async function displayUserRecipes(recipes) {
     userRecipesContainer.appendChild(row);
   }
 
-  // After building the cards, fetch & display average rating for each recipe
+  // Fetch and display average ratings for each recipe
   for (const recipe of recipes) {
     await fetchAndDisplayAverageRatingForProfile(recipe.id);
   }
 }
+
 
 /**
  * Similar function to fetch and display average rating,
