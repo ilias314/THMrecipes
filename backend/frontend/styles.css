@@ -196,19 +196,112 @@ footer p {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+/* Add to styles.css */
+.toast-container {
+  z-index: 1055;
+}
+
+.toast-custom {
+  background-color: var(--navy);
+  color: var(--yellow);
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.toast-custom.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-custom.success {
+  background-color: var(--yellow);
+  color: var(--navy);
+}
+
+.toast-custom.danger {
+  background-color: var(--navy);
+  color: var(--yellow);
+}
+
+.toast-custom.warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+/* Minimalist Pagination Container */
+.minimalist-pagination {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Minimalist Buttons */
+.minimalist-btn {
+  background: none;
+  border: none;
+  color: var(--navy);
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.minimalist-btn:hover:not(:disabled) {
+  color: var(--yellow);
+}
+
+.minimalist-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Minimalist Page Info */
+.minimalist-info {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--navy);
+}
 
 
 
 
-/* === Responsive Adjustments === */
+
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .navbar-nav {
-    text-align: center;
-  }
   .hero-section h1 {
     font-size: 2rem;
   }
   .hero-section p {
     font-size: 1rem;
+  }
+  .navbar .navbar-brand {
+    font-size: 1.4rem;
+  }
+  .card {
+    margin-bottom: 20px;
+  }
+  .container {
+    padding: 0 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  body {
+    font-size: 14px;
+  }
+  .navbar .navbar-brand {
+    font-size: 1.2rem;
+  }
+  .card {
+    margin: 10px;
+  }
+  .container {
+    padding: 0 10px;
+  }
+  .hero-section {
+    padding: 1rem;
   }
 }

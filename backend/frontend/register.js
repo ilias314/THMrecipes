@@ -7,7 +7,7 @@ async function register() {
   const messageBox = document.getElementById("message");
 
   if (!username || !email || !password) {
-    messageBox.textContent = "❌ Please fill in all fields!";
+    messageBox.textContent = "Please fill in all fields!";
     messageBox.classList.add("text-danger");
     return;
   }
@@ -18,23 +18,18 @@ async function register() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });
-
     const result = await response.json();
-
     if (response.ok) {
       messageBox.textContent = "✅ Registration successful! Redirecting to login...";
       messageBox.classList.remove("text-danger");
       messageBox.classList.add("text-success");
-
-      setTimeout(() => {
-        window.location.href = "login.html"; // Redirect after success
-      }, 1500);
+      setTimeout(() => window.location.href = "login.html", 1500);
     } else {
       throw new Error(result.message || "Registration failed!");
     }
   } catch (error) {
-    console.error("❌ Registration error:", error);
-    messageBox.textContent = `❌ ${error.message}`;
+    console.error("Registration error:", error);
+    messageBox.textContent = `${error.message}`;
     messageBox.classList.add("text-danger");
   }
 }

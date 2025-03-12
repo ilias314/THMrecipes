@@ -1,10 +1,14 @@
+// recipes.js
+
 const API_URL = "http://localhost:8080";
+let currentPage = 1;
+const itemsPerPage = 12; // Number of recipes to show per page
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadRecipes();
+  loadRecipes(currentPage);
 });
 
-async function loadRecipes() {
+async function loadRecipes(page) {
   const token = localStorage.getItem("accessToken");
   if (!token) {
     alert("Please log in first!");
@@ -13,23 +17,36 @@ async function loadRecipes() {
   }
 
   try {
+    // Fetch all recipes from the backend
     const response = await fetch(`${API_URL}/recipes`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
     });
 
+    if (!response.ok) {
+      throw new Error(`Error loading recipes: ${response.status} ${response.statusText}`);
+    }
+
     const recipes = await response.json();
-    displayRecipes(recipes);
+
+    // Calculate pagination
+    const totalRecipes = recipes.length;
+    const totalPages = Math.ceil(totalRecipes / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const selectedRecipes = recipes.slice(startIndex, startIndex + itemsPerPage);
+
+    displayRecipes(selectedRecipes);
+    renderPaginationControls(totalPages, page);
   } catch (error) {
     console.error("Error fetching recipes:", error);
     alert(error.message);
   }
 }
 
-async function displayRecipes(recipes) {
+function displayRecipes(recipes) {
   const recipesList = document.getElementById("recipesList");
   if (!recipesList) {
     console.error("Recipes list element not found!");
@@ -39,7 +56,7 @@ async function displayRecipes(recipes) {
 
   const loggedInUserId = parseInt(localStorage.getItem("userId"), 10);
 
-  // We group 3 recipes per row
+  // Group recipes in rows (3 per row)
   for (let i = 0; i < recipes.length; i += 3) {
     const row = document.createElement("div");
     row.className = "row mb-4";
@@ -51,7 +68,7 @@ async function displayRecipes(recipes) {
         imageUrl = `/images/${imageUrl}`;
       }
 
-      // Only display Edit/Delete if user owns the recipe
+      // Only display Edit/Delete if the recipe belongs to the logged-in user
       let extraButtons = "";
       if (parseInt(recipe.user_id, 10) === loggedInUserId) {
         extraButtons = `
@@ -67,27 +84,16 @@ async function displayRecipes(recipes) {
       const recipeCard = `
         <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
-            <img
-              src="${imageUrl}"
-              class="card-img-top recipe-image"
-              alt="${recipe.title}"
-              onerror="this.onerror=null;this.src='default-image.jpg';"
-            />
+            <img src="${imageUrl}" class="card-img-top recipe-image" alt="${recipe.title}" onerror="this.onerror=null;this.src='default-image.jpg';" />
             <div class="card-body">
               <h5 class="card-title">${recipe.title}</h5>
               <p class="card-text">${recipe.description || ""}</p>
               <!-- Star rating container -->
               <div id="avgRating-${recipe.id}" class="mb-2"></div>
-
-              <!-- "View Recipe" and "Add to Wishlist" both share .btn-primary style -->
-              <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">
-                View Recipe
-              </a>
+              <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">View Recipe</a>
               <button class="btn btn-primary mb-2" onclick="addRecipeToWishlist(${recipe.id})">
                 <i class="fas fa-heart"></i>
               </button>
-
-              <!-- Edit/Delete as icons for the owner only -->
               ${extraButtons}
             </div>
           </div>
@@ -98,14 +104,11 @@ async function displayRecipes(recipes) {
     recipesList.appendChild(row);
   }
 
-  // For each recipe, fetch & display average rating
-  for (const recipe of recipes) {
-    await fetchAndDisplayAverageRating(recipe.id);
-  }
+  // For each displayed recipe, fetch and display its average rating
+  recipes.forEach(recipe => {
+    fetchAndDisplayAverageRating(recipe.id);
+  });
 }
-
-
-
 
 async function fetchAndDisplayAverageRating(recipeId) {
   try {
@@ -113,7 +116,7 @@ async function fetchAndDisplayAverageRating(recipeId) {
     const response = await fetch(`${API_URL}/recipes/${recipeId}/ratings`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
     });
     if (!response.ok) throw new Error("Failed to fetch ratings");
@@ -128,7 +131,7 @@ async function fetchAndDisplayAverageRating(recipeId) {
     }
 
     let sum = 0;
-    ratings.forEach((r) => (sum += r.rating));
+    ratings.forEach(r => (sum += r.rating));
     const avg = sum / ratings.length;
     ratingContainer.innerHTML = getStarsHtml(avg);
   } catch (err) {
@@ -140,31 +143,51 @@ function getStarsHtml(average) {
   const rounded = Math.round(average);
   let stars = "";
   for (let i = 1; i <= 5; i++) {
-    if (i <= rounded) {
-      stars += '<i class="fas fa-star" style="color: #FFD700;"></i>';
-    } else {
-      stars += '<i class="far fa-star" style="color: #FFD700;"></i>';
-    }
+    stars += i <= rounded ? '<i class="fas fa-star" style="color: #FFD700;"></i>'
+      : '<i class="far fa-star" style="color: #FFD700;"></i>';
   }
   stars += ` <span class="ms-2">(${average.toFixed(1)})</span>`;
   return stars;
 }
 
-// Edit Recipe (using prompts)
+function renderPaginationControls(totalPages, currentPage) {
+  const paginationContainer = document.getElementById("pagination-container");
+  if (!paginationContainer) return;
+
+  paginationContainer.innerHTML = `
+    <button class="btn btn-outline-primary" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>⬅ Previous</button>
+    <span class="mx-3">Page ${currentPage} of ${totalPages}</span>
+    <button class="btn btn-outline-primary" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>Next ➡</button>
+  `;
+
+  document.getElementById("prevPage")?.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      loadRecipes(currentPage);
+    }
+  });
+  document.getElementById("nextPage")?.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      loadRecipes(currentPage);
+    }
+  });
+}
+
 async function editRecipe(recipeId) {
+  // (Edit functionality remains unchanged)
   const token = localStorage.getItem("accessToken");
   if (!token) {
     alert("Please log in first!");
     window.location.href = "login.html";
     return;
   }
-
   try {
     const fetchResponse = await fetch(`${API_URL}/recipes/${recipeId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
     });
     if (!fetchResponse.ok) {
@@ -172,20 +195,15 @@ async function editRecipe(recipeId) {
       throw new Error(err.message || "Failed to fetch recipe details.");
     }
     const recipe = await fetchResponse.json();
-
+    // Open edit modal (if using modal editing)
+    // For now, we're using prompts (or implement your modal logic)
     const newTitle = prompt("Enter new title:", recipe.title);
     if (newTitle === null) return;
     const newDescription = prompt("Enter new description:", recipe.description);
     if (newDescription === null) return;
-    const newIngredients = prompt(
-      "Enter new ingredients (comma-separated):",
-      Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : ""
-    );
+    const newIngredients = prompt("Enter new ingredients (comma-separated):", Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : "");
     if (newIngredients === null) return;
-    const newInstructions = prompt(
-      "Enter new instructions (comma-separated):",
-      Array.isArray(recipe.instructions) ? recipe.instructions.join(", ") : ""
-    );
+    const newInstructions = prompt("Enter new instructions (comma-separated):", Array.isArray(recipe.instructions) ? recipe.instructions.join(", ") : "");
     if (newInstructions === null) return;
 
     const updateData = {
@@ -200,7 +218,7 @@ async function editRecipe(recipeId) {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(updateData),
     });
@@ -209,14 +227,13 @@ async function editRecipe(recipeId) {
       throw new Error(errData.message || "Failed to update recipe.");
     }
     alert("Recipe updated successfully!");
-    loadRecipes();
+    loadRecipes(currentPage);
   } catch (error) {
     console.error("Error updating recipe:", error);
     alert(error.message);
   }
 }
 
-// Delete Recipe
 async function deleteRecipe(recipeId) {
   const token = localStorage.getItem("accessToken");
   if (!token) {
@@ -232,7 +249,7 @@ async function deleteRecipe(recipeId) {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
     });
     if (!response.ok) {
@@ -240,30 +257,21 @@ async function deleteRecipe(recipeId) {
       throw new Error(errData.message || "Failed to delete recipe.");
     }
     alert("Recipe deleted successfully!");
-    loadRecipes();
+    loadRecipes(currentPage);
   } catch (error) {
     console.error("Error deleting recipe:", error);
     alert(error.message);
   }
 }
-// Updated Logout Function in auth.js
-function logout(event) {
-  if (event) event.preventDefault();
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("userId");
-  window.location.href = "login.html";
-}
+
 async function addRecipeToWishlist(recipeId) {
   const token = localStorage.getItem("accessToken");
   const userId = localStorage.getItem("userId");
-
   if (!token || !userId) {
     alert("Please log in first!");
     window.location.href = "login.html";
     return;
   }
-
   try {
     const response = await fetch(`${API_URL}/wishlist`, {
       method: "POST",
@@ -273,7 +281,6 @@ async function addRecipeToWishlist(recipeId) {
       },
       body: JSON.stringify({ user_id: parseInt(userId, 10), recipe_id: recipeId })
     });
-
     if (response.ok) {
       alert("Added to wishlist!");
     } else if (response.status === 409) {
@@ -288,4 +295,34 @@ async function addRecipeToWishlist(recipeId) {
   }
 }
 
+function logout(event) {
+  if (event) event.preventDefault();
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}
+function changePage(direction) {
+  currentPage += direction;
+  loadRecipes(currentPage);
+  // Scroll to the top smoothly after changing page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
+function renderPaginationControls(totalPages, currentPage) {
+  const paginationContainer = document.getElementById("pagination-container");
+  if (!paginationContainer) return;
+
+  paginationContainer.innerHTML = `
+    <button class="btn custom-pagination-btn me-3" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>
+      <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    <span id="pageInfo" class="custom-pagination-info">Page ${currentPage} of ${totalPages}</span>
+    <button class="btn custom-pagination-btn ms-3" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>
+      Next <i class="fas fa-chevron-right"></i>
+    </button>
+  `;
+
+  document.getElementById("prevPage")?.addEventListener("click", () => changePage(-1));
+  document.getElementById("nextPage")?.addEventListener("click", () => changePage(1));
+}

@@ -1,6 +1,6 @@
 /**
- * @file wishlist.js
- * @description Verwalten der Wunschliste eines Benutzers: Anzeigen, Hinzufügen und Entfernen von Rezepten.
+ * @file wishList.js
+ * @description Manages the user's wishlist: displaying, adding, and removing recipes.
  */
 
 const API_URL = "http://localhost:8080";
@@ -9,42 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadWishlist();
 });
 
-/**
- * Zeigt eine Bootstrap-Alert-Meldung an.
- * @param {string} message - Die Nachricht, die angezeigt wird.
- * @param {string} type - Bootstrap-Alert-Typ (info, success, warning, danger).
- * @param {number} timeout - Dauer in Millisekunden, bevor die Meldung automatisch verschwindet.
- */
-function showAlert(message, type = "info", timeout = 3000) {
-  const alertContainer = document.getElementById("alertContainer");
-  if (!alertContainer) return;
-
-  const alert = document.createElement("div");
-  alert.className = `alert alert-${type} alert-dismissible fade show`;
-  alert.role = "alert";
-  alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-
-  alertContainer.appendChild(alert);
-
-  setTimeout(() => {
-    alert.classList.remove("show");
-    alert.classList.add("fade");
-    setTimeout(() => alert.remove(), 500);
-  }, timeout);
-}
-
-/**
- * @api {get} /wishlist/:userId Lade die Wunschliste eines Benutzers
- * @apiName GetWishlist
- * @apiGroup Wishlist
- * @apiHeader {String} Authorization Bearer Token
- * @apiSuccess {Object[]} wishlist Array von Rezept-Objekten in der Wunschliste.
- * @apiError 401 Unauthorized Kein Zugriff, Token fehlt oder ungültig.
- * @apiError 500 Internal Server Error Fehler beim Abrufen der Daten.
- */
 async function loadWishlist() {
   const token = localStorage.getItem("accessToken");
   const userId = localStorage.getItem("userId");
@@ -66,14 +30,10 @@ async function loadWishlist() {
     displayWishlist(wishlist);
   } catch (error) {
     console.error("Error loading wishlist:", error);
-    showAlert("Error loading wishlist.", "danger");
+    showCustomToast("Error loading wishlist.", "danger");
   }
 }
 
-/**
- * Zeigt die Wunschliste auf der Seite an.
- * @param {Object[]} wishlist - Liste der Rezeptobjekte in der Wunschliste.
- */
 function displayWishlist(wishlist) {
   const wishlistContainer = document.getElementById("wishlistContainer");
   wishlistContainer.innerHTML = "";
@@ -107,24 +67,12 @@ function displayWishlist(wishlist) {
   });
 }
 
-/**
- * @api {delete} /wishlist/:userId/:recipeId Rezept aus der Wunschliste entfernen
- * @apiName RemoveFromWishlist
- * @apiGroup Wishlist
- * @apiHeader {String} Authorization Bearer Token
- * @apiParam {Number} userId ID des Benutzers
- * @apiParam {Number} recipeId ID des zu entfernenden Rezepts
- * @apiSuccess 200 OK Rezept erfolgreich entfernt
- * @apiError 401 Unauthorized Kein Zugriff, Token fehlt oder ungültig
- * @apiError 404 Not Found Rezept nicht gefunden oder nicht in der Wunschliste
- * @apiError 500 Internal Server Error Fehler beim Entfernen des Rezepts
- */
 async function removeFromWishlist(recipeId) {
   const token = localStorage.getItem("accessToken");
   const userId = localStorage.getItem("userId");
 
   if (!token || !userId) {
-    showAlert("Please log in first!", "warning");
+    showCustomToast("Please log in first!", "warning");
     return;
   }
 
@@ -135,25 +83,36 @@ async function removeFromWishlist(recipeId) {
     });
 
     if (response.ok) {
-      showAlert("Removed from wishlist!", "success");
+      showCustomToast("Removed from wishlist!", "success");
       loadWishlist();
     } else if (response.status === 404) {
-      showAlert("Recipe not found in wishlist.", "warning");
+      showCustomToast("Recipe not found in wishlist.", "warning");
     } else {
       throw new Error("Failed to remove from wishlist.");
     }
   } catch (error) {
     console.error("Error removing from wishlist:", error);
-    showAlert("Error removing from wishlist.", "danger");
+    showCustomToast("Error removing from wishlist.", "danger");
   }
 }
 
-/**
- * Loggt den Benutzer aus, löscht das Token und leitet zur Login-Seite weiter.
- */
 function logout() {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("userId");
-  showAlert("Successfully logged out!", "info");
+  showCustomToast("Successfully logged out!", "info");
   setTimeout(() => window.location.href = "login.html", 1000);
+}
+
+function showCustomToast(message, type = "success") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  const toast = document.createElement("div");
+  toast.classList.add("toast-custom", type);
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add("show"), 100);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => container.removeChild(toast), 500);
+  }, 3000);
 }

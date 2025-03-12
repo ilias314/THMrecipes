@@ -9,15 +9,20 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<!-- Navigation -->
+<!-- Responsive Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
-    <a class="navbar-brand" href="#" onclick="redirectHome()">THM Recipes</a>
-    <div class="navbar-nav ms-auto">
-      <a class="nav-link" href="recipes.html">Recipes</a>
-      <a class="nav-link" href="wishlist.html">Wishlist</a>
-      <a class="nav-link" href="profile.html">Profile</a>
-      <a class="nav-link" href="#" onclick="logout()">Logout</a>
+    <a class="navbar-brand" href="recipes.html" onclick="redirectHome()">THM Recipes</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAddRecipe" aria-controls="navbarAddRecipe" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarAddRecipe">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="recipes.html">Recipes</a></li>
+        <li class="nav-item"><a class="nav-link" href="wishlist.html">Wishlist</a></li>
+        <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+      </ul>
     </div>
   </div>
 </nav>
@@ -52,7 +57,6 @@
               <label for="imageUpload" class="form-label">Recipe Image</label>
               <input type="file" id="imageUpload" class="form-control" accept="image/*" required>
             </div>
-            <!-- Add Recipe and Back to Recipes Buttons -->
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">Add Recipe</button>
               <a href="recipes.html" class="btn btn-secondary">Back to Recipes</a>
@@ -65,21 +69,9 @@
   </div>
 </div>
 
-
-<!-- Toast Notifications -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header">
-      <strong class="me-auto">Recipe App</strong>
-      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-    <div class="toast-body"></div>
-  </div>
-</div>
-
-<!-- Footer (using unified footer styling from styles.css) -->
+<!-- Responsive Footer remains unchanged -->
 <footer>
-  <p>&copy; 2023 Recipe App. All rights reserved.</p>
+  <p>&copy; 2025 Recipe App. All rights reserved.</p>
   <div>
     <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
     <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>

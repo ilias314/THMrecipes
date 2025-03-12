@@ -409,7 +409,7 @@ public class MainVerticle extends AbstractVerticle {
           // Generate Access Token (short-lived)
           String accessToken = jwtProvider.generateToken(
             new JsonObject().put("userId", userId),
-            new JWTOptions().setExpiresInMinutes(15)  // Shorter expiration time
+            new JWTOptions().setExpiresInMinutes(60)  // Shorter expiration time
           );
 
           // Generate Refresh Token (long-lived)

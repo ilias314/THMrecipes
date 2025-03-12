@@ -29,7 +29,7 @@ async function login() {
       throw new Error(result.message || "Login failed!");
     }
   } catch (error) {
-    console.error("❌ Error during login:", error);
+    console.error("Error during login:", error);
     alert(error.message);
   }
 }
@@ -112,5 +112,30 @@ function redirectHome() {
     window.location.href = "index.html";
   }
 }
+
+function showConfirmationDialog(message, onConfirm) {
+  const modalElement = document.getElementById('confirmationModal');
+  const messageElement = document.getElementById('confirmationMessage');
+  const confirmButton = document.getElementById('confirmButton');
+
+  // Set the confirmation message
+  messageElement.textContent = message;
+
+  // Remove previous event listeners by cloning the button
+  const newConfirmButton = confirmButton.cloneNode(true);
+  confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+
+  // When the user clicks confirm, hide modal and call callback
+  newConfirmButton.addEventListener('click', () => {
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    modalInstance.hide();
+    onConfirm();
+  });
+
+  // Show the confirmation modal
+  const confirmationModal = new bootstrap.Modal(modalElement);
+  confirmationModal.show();
+}
+
 
 
