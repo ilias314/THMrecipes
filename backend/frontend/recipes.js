@@ -4,6 +4,9 @@ const API_URL = "http://localhost:8080";
 let currentPage = 1;
 const itemsPerPage = 12; // Number of recipes to show per page
 
+// We'll store the recipe ID that we're editing in a global variable
+let currentEditedRecipeId = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   loadRecipes(currentPage);
 });
@@ -11,18 +14,17 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadRecipes(page) {
   const token = localStorage.getItem("accessToken");
   if (!token) {
-    alert("Please log in first!");
+    showCustomToast("Please log in first!", "danger");
     window.location.href = "login.html";
     return;
   }
 
   try {
-    // Fetch all recipes from the backend
     const response = await fetch(`${API_URL}/recipes`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
     });
 
@@ -42,7 +44,7 @@ async function loadRecipes(page) {
     renderPaginationControls(totalPages, page);
   } catch (error) {
     console.error("Error fetching recipes:", error);
-    alert(error.message);
+    showCustomToast(error.message, "danger");
   }
 }
 
@@ -84,7 +86,8 @@ function displayRecipes(recipes) {
       const recipeCard = `
         <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
-            <img src="${imageUrl}" class="card-img-top recipe-image" alt="${recipe.title}" onerror="this.onerror=null;this.src='default-image.jpg';" />
+            <img src="${imageUrl}" class="card-img-top recipe-image" alt="${recipe.title}"
+                 onerror="this.onerror=null;this.src='default-image.jpg';" />
             <div class="card-body">
               <h5 class="card-title">${recipe.title}</h5>
               <p class="card-text">${recipe.description || ""}</p>
@@ -116,7 +119,7 @@ async function fetchAndDisplayAverageRating(recipeId) {
     const response = await fetch(`${API_URL}/recipes/${recipeId}/ratings`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
     });
     if (!response.ok) throw new Error("Failed to fetch ratings");
@@ -143,21 +146,29 @@ function getStarsHtml(average) {
   const rounded = Math.round(average);
   let stars = "";
   for (let i = 1; i <= 5; i++) {
-    stars += i <= rounded ? '<i class="fas fa-star" style="color: #FFD700;"></i>'
+    stars += i <= rounded
+      ? '<i class="fas fa-star" style="color: #FFD700;"></i>'
       : '<i class="far fa-star" style="color: #FFD700;"></i>';
   }
   stars += ` <span class="ms-2">(${average.toFixed(1)})</span>`;
   return stars;
 }
 
+/**
+ * Renders the pagination controls (Previous, Next) at the bottom.
+ */
 function renderPaginationControls(totalPages, currentPage) {
   const paginationContainer = document.getElementById("pagination-container");
   if (!paginationContainer) return;
 
   paginationContainer.innerHTML = `
-    <button class="btn btn-outline-primary" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>⬅ Previous</button>
-    <span class="mx-3">Page ${currentPage} of ${totalPages}</span>
-    <button class="btn btn-outline-primary" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>Next ➡</button>
+    <button class="btn-outline-primary me-2" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span id="pageInfo" class="minimalist-info">Page ${currentPage} of ${totalPages}</span>
+    <button class="btn-outline-primary ms-2" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>
+      <i class="fas fa-chevron-right"></i>
+    </button>
   `;
 
   document.getElementById("prevPage")?.addEventListener("click", () => {
@@ -174,11 +185,13 @@ function renderPaginationControls(totalPages, currentPage) {
   });
 }
 
+/**
+ * Edit an existing recipe (opens the Bootstrap modal).
+ */
 async function editRecipe(recipeId) {
-  // (Edit functionality remains unchanged)
   const token = localStorage.getItem("accessToken");
   if (!token) {
-    alert("Please log in first!");
+    showCustomToast("Please log in first!", "danger");
     window.location.href = "login.html";
     return;
   }
@@ -187,7 +200,7 @@ async function editRecipe(recipeId) {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
     });
     if (!fetchResponse.ok) {
@@ -195,80 +208,130 @@ async function editRecipe(recipeId) {
       throw new Error(err.message || "Failed to fetch recipe details.");
     }
     const recipe = await fetchResponse.json();
-    // Open edit modal (if using modal editing)
-    // For now, we're using prompts (or implement your modal logic)
-    const newTitle = prompt("Enter new title:", recipe.title);
-    if (newTitle === null) return;
-    const newDescription = prompt("Enter new description:", recipe.description);
-    if (newDescription === null) return;
-    const newIngredients = prompt("Enter new ingredients (comma-separated):", Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : "");
-    if (newIngredients === null) return;
-    const newInstructions = prompt("Enter new instructions (comma-separated):", Array.isArray(recipe.instructions) ? recipe.instructions.join(", ") : "");
-    if (newInstructions === null) return;
 
-    const updateData = {
-      title: newTitle,
-      description: newDescription,
-      ingredients: newIngredients,
-      instructions: newInstructions,
-      image_url: recipe.image_url || "/images/default.png",
-    };
+    // Fill in modal form fields
+    document.getElementById("recipeTitleInput").value = recipe.title || "";
+    document.getElementById("recipeDescriptionInput").value = recipe.description || "";
+    document.getElementById("recipeIngredientsInput").value = Array.isArray(recipe.ingredients)
+      ? recipe.ingredients.join(", ")
+      : recipe.ingredients || "";
+    document.getElementById("recipeInstructionsInput").value = Array.isArray(recipe.instructions)
+      ? recipe.instructions.join(", ")
+      : recipe.instructions || "";
 
-    const updateResponse = await fetch(`${API_URL}/recipes/${recipeId}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(updateData),
-    });
-    if (!updateResponse.ok) {
-      const errData = await updateResponse.json();
-      throw new Error(errData.message || "Failed to update recipe.");
-    }
-    alert("Recipe updated successfully!");
-    loadRecipes(currentPage);
+    // Store recipeId in global variable
+    currentEditedRecipeId = recipeId;
+
+    // Show the Bootstrap modal
+    const modalEl = document.getElementById("editRecipeModal");
+    const modalInstance = new bootstrap.Modal(modalEl);
+    modalInstance.show();
   } catch (error) {
-    console.error("Error updating recipe:", error);
-    alert(error.message);
+    console.error("Error loading recipe for edit:", error);
+    showCustomToast(error.message, "danger");
   }
 }
 
-async function deleteRecipe(recipeId) {
+/**
+ * Called when user clicks "Save Changes" in the Edit Recipe modal.
+ */
+async function updateRecipeFromModal() {
   const token = localStorage.getItem("accessToken");
   if (!token) {
-    alert("Please log in first!");
+    showCustomToast("Please log in first!", "danger");
     window.location.href = "login.html";
     return;
   }
-  if (!confirm("Are you sure you want to delete this recipe? This action cannot be undone.")) {
+  if (!currentEditedRecipeId) {
+    showCustomToast("No recipe is currently being edited.", "danger");
     return;
   }
+
+  // Collect updated info
+  const newTitle = document.getElementById("recipeTitleInput").value;
+  const newDescription = document.getElementById("recipeDescriptionInput").value;
+  const newIngredients = document.getElementById("recipeIngredientsInput").value;
+  const newInstructions = document.getElementById("recipeInstructionsInput").value;
+
+  const updateData = {
+    title: newTitle,
+    description: newDescription,
+    ingredients: newIngredients,      // Will be processed by backend
+    instructions: newInstructions,    // Will be processed by backend
+  };
+
   try {
-    const response = await fetch(`${API_URL}/recipes/${recipeId}`, {
-      method: "DELETE",
+    const response = await fetch(`${API_URL}/recipes/${currentEditedRecipeId}`, {
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(updateData),
     });
     if (!response.ok) {
       const errData = await response.json();
-      throw new Error(errData.message || "Failed to delete recipe.");
+      throw new Error(errData.message || "Failed to update recipe.");
     }
-    alert("Recipe deleted successfully!");
+
+    // Hide the modal
+    const modalEl = document.getElementById("editRecipeModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    modalInstance.hide();
+
+    showCustomToast("Recipe updated successfully!", "success");
+    // Reload the recipe list
     loadRecipes(currentPage);
   } catch (error) {
-    console.error("Error deleting recipe:", error);
-    alert(error.message);
+    console.error("Error updating recipe:", error);
+    showCustomToast(error.message, "danger");
   }
 }
 
+/**
+ * Delete a recipe using a confirmation modal.
+ */
+function deleteRecipe(recipeId) {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    showCustomToast("Please log in first!", "danger");
+    window.location.href = "login.html";
+    return;
+  }
+
+  showConfirmationDialog(
+    "Are you sure you want to delete this recipe? This action cannot be undone.",
+    async () => {
+      try {
+        const response = await fetch(`${API_URL}/recipes/${recipeId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || "Failed to delete recipe.");
+        }
+        showCustomToast("Recipe deleted successfully!", "success");
+        loadRecipes(currentPage);
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+        showCustomToast(error.message, "danger");
+      }
+    }
+  );
+}
+
+/**
+ * Add a recipe to wishlist (unchanged).
+ */
 async function addRecipeToWishlist(recipeId) {
   const token = localStorage.getItem("accessToken");
   const userId = localStorage.getItem("userId");
   if (!token || !userId) {
-    alert("Please log in first!");
+    showCustomToast("Please log in first!", "danger");
     window.location.href = "login.html";
     return;
   }
@@ -277,24 +340,27 @@ async function addRecipeToWishlist(recipeId) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ user_id: parseInt(userId, 10), recipe_id: recipeId })
+      body: JSON.stringify({ user_id: parseInt(userId, 10), recipe_id: recipeId }),
     });
     if (response.ok) {
-      alert("Added to wishlist!");
+      showCustomToast("Added to wishlist!", "success");
     } else if (response.status === 409) {
-      alert("Recipe is already in your wishlist.");
+      showCustomToast("Recipe is already in your wishlist.", "warning");
     } else {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to add to wishlist");
     }
   } catch (error) {
     console.error("Error adding to wishlist:", error);
-    alert(error.message);
+    showCustomToast(error.message, "danger");
   }
 }
 
+/**
+ * Logout helper.
+ */
 function logout(event) {
   if (event) event.preventDefault();
   localStorage.removeItem("accessToken");
@@ -302,27 +368,13 @@ function logout(event) {
   localStorage.removeItem("userId");
   window.location.href = "login.html";
 }
+
+/**
+ * Custom paging approach from older code. If used, keep it or remove if not needed.
+ */
 function changePage(direction) {
   currentPage += direction;
   loadRecipes(currentPage);
-  // Scroll to the top smoothly after changing page
+  // Scroll to the top smoothly
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function renderPaginationControls(totalPages, currentPage) {
-  const paginationContainer = document.getElementById("pagination-container");
-  if (!paginationContainer) return;
-
-  paginationContainer.innerHTML = `
-    <button class="btn custom-pagination-btn me-3" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>
-      <i class="fas fa-chevron-left"></i> Previous
-    </button>
-    <span id="pageInfo" class="custom-pagination-info">Page ${currentPage} of ${totalPages}</span>
-    <button class="btn custom-pagination-btn ms-3" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>
-      Next <i class="fas fa-chevron-right"></i>
-    </button>
-  `;
-
-  document.getElementById("prevPage")?.addEventListener("click", () => changePage(-1));
-  document.getElementById("nextPage")?.addEventListener("click", () => changePage(1));
 }

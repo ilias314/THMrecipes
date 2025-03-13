@@ -6,7 +6,7 @@
   <title>Recipes - Recipe App</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <!-- Font Awesome for star icons -->
+  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" />
   <!-- Unified Styles -->
   <link rel="stylesheet" href="styles.css" />
@@ -38,15 +38,28 @@
       <h2 class="mb-0 text-center text-md-start">Recipes</h2>
     </div>
     <div class="col-md-6 text-md-end mt-3 mt-md-0">
-      <a href="add-recipe.html" class="btn btn-success">Add Recipe</a>
+      <a href="add-recipe.html" class="btn btn-success">
+        <i class="fas fa-plus-circle me-2"></i> Add Recipe
+      </a>
     </div>
   </div>
   <div class="row" id="recipesList">
     <!-- Recipe cards injected by recipes.js -->
   </div>
+  <!-- Pagination Container -->
+  <div id="pagination-container" class="minimalist-pagination d-flex justify-content-center align-items-center my-2">
+    <button id="prevPage" class="btn minimalist-btn me-2" disabled>
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span id="pageInfo" class="minimalist-info">Page 1 of X</span>
+    <button id="nextPage" class="btn minimalist-btn ms-2">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
 </div>
 
-<!-- Edit Recipe Modal -->
+<!-- Edit Recipe Modal (matches the design from recipe-detail page) -->
 <div class="modal fade" id="editRecipeModal" tabindex="-1" aria-labelledby="editRecipeModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -76,13 +89,15 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="updateRecipeFromModal()">Save Changes</button>
+        <button type="button" class="btn btn-primary" onclick="updateRecipeFromModal()">
+          Save Changes
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Global Confirmation Modal -->
+<!-- Delete Confirmation Modal (matches recipe-detail page) -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -101,27 +116,13 @@
   </div>
 </div>
 
-
-<div id="pagination-container" class="minimalist-pagination d-flex justify-content-center align-items-center my-2">
-  <button id="prevPage" class="btn minimalist-btn me-2" disabled>
-    <i class="fas fa-chevron-left"></i>
-  </button>
-  <span id="pageInfo" class="minimalist-info">Page 1 of X</span>
-  <button id="nextPage" class="btn minimalist-btn ms-2">
-    <i class="fas fa-chevron-right"></i>
-  </button>
-</div>
-
-
-
-<!-- Custom Toast Container -->
+<!-- Custom Toast Container for notifications -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 <!-- Footer -->
 <footer>
-  <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
+  <p class="mb-0 text-center">&copy; 2025 Recipe App. All rights reserved.</p>
 </footer>
-
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -146,7 +147,7 @@
     confirmationModal.show();
   }
 
-  // Global Toast Function
+  // Global Toast Function for notifications
   function showCustomToast(message, type = "success") {
     const container = document.getElementById("toastContainer");
     if (!container) return;

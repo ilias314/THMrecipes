@@ -397,7 +397,9 @@ function getStarsHtml(average) {
   const rounded = Math.round(average);
   let stars = "";
   for (let i = 1; i <= 5; i++) {
-    stars += i <= rounded ? '<i class="fas fa-star" style="color: #FFD700;"></i>' : '<i class="far fa-star" style="color: #FFD700;"></i>';
+    stars += i <= rounded
+      ? '<i class="fas fa-star" style="color: #FFD700;"></i>'
+      : '<i class="far fa-star" style="color: #FFD700;"></i>';
   }
   stars += ` <span class="ms-2">(${average.toFixed(1)})</span>`;
   return stars;
@@ -466,33 +468,6 @@ async function updateRatingFromModal() {
     console.error("Error updating rating:", error);
     showCustomToast(error.message, "danger");
   }
-}
-
-async function deleteRating(ratingId) {
-  const token = localStorage.getItem("accessToken");
-  if (!token) {
-    showCustomToast("Please log in first!", "danger");
-    window.location.href = "login.html";
-    return;
-  }
-  showConfirmationDialog("Are you sure you want to delete this rating?", async () => {
-    try {
-      const response = await fetch(`${API_URL}/ratings/${ratingId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Failed to delete rating.");
-      }
-      showCustomToast("Rating deleted successfully!", "success");
-      const recipeId = new URLSearchParams(window.location.search).get("id");
-      fetchRatings(recipeId);
-    } catch (error) {
-      console.error("Error deleting rating:", error);
-      showCustomToast(error.message, "danger");
-    }
-  });
 }
 
 function logout(event) {
