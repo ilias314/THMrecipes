@@ -1,0 +1,1 @@
+{"message":"Failed to add rating: {errorMessage=Cannot add or update a child row: a foreign key constraint fails (`InfP-WS2425-04`.`ratings`, CONSTRAINT `ratings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE), errorCode=1452, sqlState=23000}"}

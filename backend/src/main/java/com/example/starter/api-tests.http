@@ -1,0 +1,302 @@
+### Environment Variables (optional)
+@baseUrl = http://localhost:8080
+@accessToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MTk2MDMwMH0.lErpVNq5raBu4FU9GQxWB90e6-p6wA5xf0pfeMMTLbk
+@refreshToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MjA0MzEwMH0.-9LixzKtQOAcfwBYQoKtXt-FFh7AHz4zsPLT8LTNRNQ
+@userId = 89
+@recipeId = 89
+@ratingId = 20
+@commentId = 23
+
+##########################################################################
+### 1. Auth Routes
+##########################################################################
+
+### Register Positive Test
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "username": "testU",
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+### Register Negative Test (missing password)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "username": "testUser2",
+  "email": "testuser2@example.com"
+}
+
+### Login Positive Test
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+### Login Negative Test (wrong password)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "WrongPassword"
+}
+
+### Logout Test
+POST {{baseUrl}}/logout
+Authorization: Bearer {{accessToken}}
+
+##########################################################################
+### 2. User Routes
+##########################################################################
+
+### Create User (POST /users)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "username": "newUser",
+  "email": "newuser@example.com",
+  "password": "NewTest123"
+}
+
+### Get All Users
+GET {{baseUrl}}/users
+
+### Get User By ID (Valid)
+GET {{baseUrl}}/users/{{userId}}
+
+### Get User By ID (Invalid)
+GET {{baseUrl}}/users/999999
+
+### Update User (Positive)
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "username": "updatedUser",
+  "email": "updated@example.com",
+  "password": "Updated123"
+}
+
+### Update User (Negative - invalid email)
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "username": "updatedUser",
+  "email": "not-an-email",
+  "password": "Updated123"
+}
+
+### Delete User
+# WARNING: This deletes the user; use with caution!
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{accessToken}}
+
+##########################################################################
+### 3. Recipe Routes
+##########################################################################
+
+### Create Recipe (POST /recipes)
+POST {{baseUrl}}/recipes
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Test Recipe",
+  "description": "This is a test recipe.",
+  "ingredients": "flour, sugar, eggs",
+  "instructions": "mix, bake, serve",
+  "image_url": "/images/default-image.jpg"
+}
+
+### Get All Recipes
+GET {{baseUrl}}/recipes
+Authorization: Bearer {{accessToken}}
+
+### Get Recipe By ID
+GET {{baseUrl}}/recipes/{{recipeId}}
+Authorization: Bearer {{accessToken}}
+
+### Update Recipe (Positive)
+PUT {{baseUrl}}/recipes/{{recipeId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Updated Recipe Title",
+  "description": "Updated description.",
+  "ingredients": "flour, sugar, eggs, milk",
+  "instructions": "mix, bake, cool, serve",
+  "image_url": "/images/test-recipe.jpg"
+}
+
+### Update Recipe (Negative - Missing Fields)
+PUT {{baseUrl}}/recipes/{{recipeId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Incomplete Recipe"
+}
+
+### Delete Recipe
+DELETE {{baseUrl}}/recipes/{{recipeId}}
+Authorization: Bearer {{accessToken}}
+
+### Get Recipes by User ID
+GET {{baseUrl}}/users/{{userId}}/recipes
+Authorization: Bearer {{accessToken}}
+
+##########################################################################
+### 4. Rating Routes
+##########################################################################
+
+### Add Rating to a Recipe
+POST {{baseUrl}}/recipes/{{recipeId}}/ratings
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "rating": 4
+}
+
+### Get All Ratings for a Recipe
+GET {{baseUrl}}/recipes/{{recipeId}}/ratings
+Authorization: Bearer {{accessToken}}
+
+### Get Rating by ID
+GET {{baseUrl}}/ratings/{{ratingId}}
+Authorization: Bearer {{accessToken}}
+
+### Update Rating (Positive)
+PUT {{baseUrl}}/ratings/{{ratingId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "rating": 5
+}
+
+### Update Rating (Negative - Invalid value)
+PUT {{baseUrl}}/ratings/{{ratingId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "rating": 10
+}
+
+### Delete Rating
+DELETE {{baseUrl}}/ratings/{{ratingId}}
+Authorization: Bearer {{accessToken}}
+
+### Get User Ratings
+GET {{baseUrl}}/users/{{userId}}/ratings
+Authorization: Bearer {{accessToken}}
+
+##########################################################################
+### 5. Comment Routes
+##########################################################################
+
+### Add Comment to a Recipe
+POST {{baseUrl}}/recipes/{{recipeId}}/comments
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "content": "This is a test comment."
+}
+
+### Get All Comments for a Recipe
+GET {{baseUrl}}/recipes/{{recipeId}}/comments
+Authorization: Bearer {{accessToken}}
+
+### Get Comment by ID
+GET {{baseUrl}}/comments/{{commentId}}
+Authorization: Bearer {{accessToken}}
+
+### Update Comment (Positive)
+PUT {{baseUrl}}/comments/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "content": "This comment has been updated."
+}
+
+### Update Comment (Negative - Missing content)
+PUT {{baseUrl}}/comments/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+}
+
+### Delete Comment
+DELETE {{baseUrl}}/comments/{{commentId}}
+Authorization: Bearer {{accessToken}}
+
+### Get User Comments
+GET {{baseUrl}}/users/{{userId}}/comments
+Authorization: Bearer {{accessToken}}
+
+##########################################################################
+### 6. Token Refresh Route
+##########################################################################
+
+### Refresh Token
+POST {{baseUrl}}/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+##########################################################################
+### 7. File Upload Route
+##########################################################################
+
+### Upload Image
+# Note: Adjust the file path accordingly. WebStorm HTTP Client supports file uploads.
+POST {{baseUrl}}/upload
+Content-Type: multipart/form-data
+Authorization: Bearer {{accessToken}}
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="vegetarian-recipes.jpg"
+Content-Type: image/jpeg
+
+< C:\Users\ilyas\infp-wise-24-25-team-04\backend\images\vegetarian-recipes.jpg
+--boundary--
+
+##########################################################################
+### 8. Wishlist Routes
+##########################################################################
+
+### Add Recipe to Wishlist
+POST {{baseUrl}}/wishlist
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "user_id": {{userId}},
+  "recipe_id": {{recipeId}}
+}
+
+### Get Wishlist for a User
+GET {{baseUrl}}/wishlist/{{userId}}
+Authorization: Bearer {{accessToken}}
+
+### Remove Recipe from Wishlist
+DELETE {{baseUrl}}/wishlist/{{userId}}/{{recipeId}}
+Authorization: Bearer {{accessToken}}

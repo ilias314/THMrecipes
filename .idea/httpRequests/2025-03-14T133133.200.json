@@ -1,0 +1,247 @@
+[
+  {
+    "id": 79,
+    "user_id": 37,
+    "title": "Quik Dinner",
+    "description": "schöne Quik Dinner",
+    "image_url": "/images/Quick Dinner.jpg",
+    "created_at": "2025-03-07T09:12:54",
+    "ingredients": [
+      "chicken \r\neggs"
+    ],
+    "instructions": [
+      "step 1 ",
+      "step 2 ",
+      "step3"
+    ]
+  },
+  {
+    "id": 80,
+    "user_id": 37,
+    "title": "Bulgogi",
+    "description": "Bulgogi style",
+    "image_url": "/images/Bulgogi-Style Tofu.jpg",
+    "created_at": "2025-03-07T09:14:41",
+    "ingredients": [
+      "tofu ",
+      "tomato"
+    ],
+    "instructions": [
+      "step 1 ",
+      "step 2 "
+    ]
+  },
+  {
+    "id": 81,
+    "user_id": 37,
+    "title": "Cowboy",
+    "description": "Cowboy pie",
+    "image_url": "/images/Cowboy-pie.jpg",
+    "created_at": "2025-03-07T09:17:49",
+    "ingredients": [
+      "Tomaten ",
+      "Salz"
+    ],
+    "instructions": [
+      "Tomaten "
+    ]
+  },
+  {
+    "id": 82,
+    "user_id": 37,
+    "title": "Four Cheese",
+    "description": "Four Cheese",
+    "image_url": "/images/Four-Cheese-Manicotti.webp",
+    "created_at": "2025-03-07T09:26:24",
+    "ingredients": [
+      "tomaten "
+    ],
+    "instructions": [
+      "Schrit 1 ",
+      "Schritt 2"
+    ]
+  },
+  {
+    "id": 83,
+    "user_id": 37,
+    "title": "Gnocchi ",
+    "description": "Gnocchi with Spinach",
+    "image_url": "/images/Gnocchi-with-Spinach-and-Chicken-Sausage_EXPS_SDON18_126406_B06_15_7b.jpg",
+    "created_at": "2025-03-07T09:27:48",
+    "ingredients": [
+      "Spinach"
+    ],
+    "instructions": [
+      "schritt 1",
+      "schritt 2"
+    ]
+  },
+  {
+    "id": 84,
+    "user_id": 37,
+    "title": "Vegetarian",
+    "description": "Vegetarian Soupe",
+    "image_url": "/images/vegetarian-recipes.jpg",
+    "created_at": "2025-03-07T09:34:01",
+    "ingredients": [
+      "Salz"
+    ],
+    "instructions": [
+      "Schritt1 ",
+      "Schritt2"
+    ]
+  },
+  {
+    "id": 85,
+    "user_id": 37,
+    "title": "Ratatouille",
+    "description": "Ratatouille",
+    "image_url": "/images/Ratatouille.jpg",
+    "created_at": "2025-03-07T09:35:24",
+    "ingredients": [
+      "Salz"
+    ],
+    "instructions": [
+      "Schritt1 ",
+      "Schritt2"
+    ]
+  },
+  {
+    "id": 86,
+    "user_id": 37,
+    "title": "Couscous",
+    "description": "Marokkanische Couscous",
+    "image_url": "/images/couscous.webp",
+    "created_at": "2025-03-07T09:39:21",
+    "ingredients": [
+      "Gemüse"
+    ],
+    "instructions": [
+      "Schritt1 ",
+      "Schritt2"
+    ]
+  },
+  {
+    "id": 89,
+    "user_id": 37,
+    "title": "Pizza",
+    "description": "Pizza crust",
+    "image_url": "/images/RM-244638-no-yeast-pizza-crust-ddmfs-3x4-1545-567c1292e77f467894830c7a92e0f2fe.jpg",
+    "created_at": "2025-03-07T09:43:41",
+    "ingredients": [
+      "tomaten"
+    ],
+    "instructions": [
+      "Schritt1 ......"
+    ]
+  },
+  {
+    "id": 93,
+    "user_id": 37,
+    "title": "Pizza",
+    "description": "Pizza ",
+    "image_url": "/images/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2017__02__20170216-detroit-style-pizza-47-1500x1125-1-233d75e6021048b3bf3cf28bd59d310b.jpg",
+    "created_at": "2025-03-07T09:50:54",
+    "ingredients": [
+      "Gemüse"
+    ],
+    "instructions": [
+      "Schritt1",
+      "Schritt2 ...."
+    ]
+  },
+  {
+    "id": 94,
+    "user_id": 37,
+    "title": "Pizza",
+    "description": "Pizza",
+    "image_url": "/images/one-tray-pizza-with-sausage-and-tallegio-159073-2.jpg",
+    "created_at": "2025-03-07T09:52:11",
+    "ingredients": [
+      "Salz ",
+      "Cheese"
+    ],
+    "instructions": [
+      "Schitt1",
+      "Schitt2 ...."
+    ]
+  },
+  {
+    "id": 121,
+    "user_id": 52,
+    "title": "another tanjia",
+    "description": "tanjia",
+    "image_url": "/images/1741461549672-Tanjia-Marrakchia.jpg",
+    "created_at": "2025-03-08T19:19:11",
+    "ingredients": [
+      "zit ",
+      "khodra",
+      "zitoun"
+    ],
+    "instructions": [
+      "zitoun ",
+      "zid lbssla ",
+      "zid dakchi "
+    ]
+  },
+  {
+    "id": 146,
+    "user_id": 39,
+    "title": "balbla",
+    "description": "balbla",
+    "image_url": "/images/1741725553592-Tanjia-Marrakchia.jpg",
+    "created_at": "2025-03-11T20:39:13",
+    "ingredients": [
+      "balbla"
+    ],
+    "instructions": [
+      "balbla"
+    ]
+  },
+  {
+    "id": 148,
+    "user_id": 84,
+    "title": "hhh",
+    "description": "hhhh",
+    "image_url": "/images/1741812470242-bild30.jpg",
+    "created_at": "2025-03-12T20:47:50",
+    "ingredients": [
+      "hhhh"
+    ],
+    "instructions": [
+      "hhhh"
+    ]
+  },
+  {
+    "id": 149,
+    "user_id": 85,
+    "title": "hmida rezept",
+    "description": "hmida rezept",
+    "image_url": "/images/1741906720852-tofu.jpg",
+    "created_at": "2025-03-13T22:58:40",
+    "ingredients": [
+      "hmida rezept",
+      "hmida rezept",
+      "hmida rezept"
+    ],
+    "instructions": [
+      "hmida rezept",
+      "hmida rezept",
+      "hmida rezept"
+    ]
+  },
+  {
+    "id": 151,
+    "user_id": 15,
+    "title": "rfisssa wooow",
+    "description": "f haofho",
+    "image_url": "/images/1741952258008-1741462557541-Depositphotos_642200562_XL-2829379819.jpg",
+    "created_at": "2025-03-14T11:37:37",
+    "ingredients": [
+      "fbsöa"
+    ],
+    "instructions": [
+      "fökj sabf"
+    ]
+  }
+]

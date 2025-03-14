@@ -1,0 +1,1 @@
+{"message":"You can only delete your own ratings"}

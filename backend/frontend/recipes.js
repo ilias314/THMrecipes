@@ -9,16 +9,15 @@ let currentEditedRecipeId = null;
 let currentEditedRecipeImage = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Check if user previously enabled dark mode
   const isDarkMode = localStorage.getItem('darkModeEnabled') === 'true';
   if (isDarkMode) {
     document.body.classList.add('dark-mode');
     const btn = document.getElementById('darkModeBtn');
-    if (btn) btn.textContent = 'Light Mode';
+    if (btn) btn.innerHTML = '<i id="darkModeIcon" class="fas fa-sun"></i>';
   }
-
   loadRecipes(currentPage);
 });
+
 
 /** Toggle Dark/Light mode */
 function toggleDarkMode() {
@@ -29,7 +28,9 @@ function toggleDarkMode() {
   // Update button text
   const btn = document.getElementById('darkModeBtn');
   if (btn) {
-    btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    btn.innerHTML = isDark
+      ? '<i id="darkModeIcon" class="fas fa-sun"></i>'
+      : '<i id="darkModeIcon" class="fas fa-moon"></i>';
   }
 
   // Save preference

@@ -1,0 +1,695 @@
+DELETE http://localhost:8080/users/89
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MTk2MDMwMH0.lErpVNq5raBu4FU9GQxWB90e6-p6wA5xf0pfeMMTLbk
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+###
+
+POST http://localhost:8080/recipes/89/comments
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MTk2MDMwMH0.lErpVNq5raBu4FU9GQxWB90e6-p6wA5xf0pfeMMTLbk
+Content-Length: 42
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "content": "This is a test comment."
+}
+
+<> 2025-03-14T135439.201.json
+
+###
+
+POST http://localhost:8080/recipes/89/ratings
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MTk2MDMwMH0.lErpVNq5raBu4FU9GQxWB90e6-p6wA5xf0pfeMMTLbk
+Content-Length: 17
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "rating": 4
+}
+
+<> 2025-03-14T135415.201.txt
+
+###
+
+POST http://localhost:8080/recipes
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg5LCJpYXQiOjE3NDE5NTY3MDAsImV4cCI6MTc0MTk2MDMwMH0.lErpVNq5raBu4FU9GQxWB90e6-p6wA5xf0pfeMMTLbk
+Content-Length: 192
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "Test Recipe",
+  "description": "This is a test recipe.",
+  "ingredients": "flour, sugar, eggs",
+  "instructions": "mix, bake, serve",
+  "image_url": "/images/default-image.jpg"
+}
+
+<> 2025-03-14T135354.201.txt
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 62
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+<> 2025-03-14T135140.200.json
+
+###
+
+POST http://localhost:8080/register
+Content-Type: application/json
+Content-Length: 85
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "testU",
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+<> 2025-03-14T135112.201.txt
+
+###
+
+POST http://localhost:8080/register
+Content-Type: application/json
+Content-Length: 65
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "testUser2",
+  "email": "testuser2@example.com"
+}
+
+<> 2025-03-14T135053.500.txt
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 62
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+<> 2025-03-14T135043.401.txt
+
+###
+
+DELETE http://localhost:8080/wishlist/50/89
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTU4MDQsImV4cCI6MTc0MTk1OTQwNH0.0DDejV4giPgI7Fueq4P1HTg4_F06QULJJAKHovZ1HG4
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2025-03-14T134800.200.txt
+
+###
+
+GET http://localhost:8080/wishlist/50
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTU4MDQsImV4cCI6MTc0MTk1OTQwNH0.0DDejV4giPgI7Fueq4P1HTg4_F06QULJJAKHovZ1HG4
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T134758.200.json
+
+###
+
+POST http://localhost:8080/wishlist
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTU4MDQsImV4cCI6MTc0MTk1OTQwNH0.0DDejV4giPgI7Fueq4P1HTg4_F06QULJJAKHovZ1HG4
+Content-Length: 38
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "user_id": 50,
+  "recipe_id": 89
+}
+
+<> 2025-03-14T134754.201.json
+
+###
+
+POST http://localhost:8080/refresh-token
+Content-Type: application/json
+Content-Length: 168
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MjA0MTc0Mn0.mnO47OoW1d5Krf-ltEVriIK0x5hxad2SF-eGm7uLgQI"
+}
+
+<> 2025-03-14T133644.200.txt
+
+###
+
+GET http://localhost:8080/users/50/comments
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133633.200.json
+
+###
+
+GET http://localhost:8080/users/86/comments
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133608.404.txt
+
+###
+
+GET http://localhost:8080/comments/23
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133601.200.json
+
+###
+
+GET http://localhost:8080/users/86/comments
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133523.404.txt
+
+###
+
+DELETE http://localhost:8080/comments/23
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2025-03-14T133520.403.txt
+
+###
+
+PUT http://localhost:8080/comments/23
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 3
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+}
+
+<> 2025-03-14T133516.400.txt
+
+###
+
+PUT http://localhost:8080/comments/23
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 49
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "content": "This comment has been updated."
+}
+
+<> 2025-03-14T133513.403.txt
+
+###
+
+GET http://localhost:8080/comments/23
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133508.200.json
+
+###
+
+GET http://localhost:8080/recipes/89/comments
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133505.200.json
+
+###
+
+POST http://localhost:8080/recipes/89/comments
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 42
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "content": "This is a test comment."
+}
+
+<> 2025-03-14T133443.500.txt
+
+###
+
+GET http://localhost:8080/users/86/ratings
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133347.404.txt
+
+###
+
+DELETE http://localhost:8080/ratings/20
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2025-03-14T133344.403.txt
+
+###
+
+PUT http://localhost:8080/ratings/20
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 18
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "rating": 10
+}
+
+<> 2025-03-14T133338.400.txt
+
+###
+
+PUT http://localhost:8080/ratings/20
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 17
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "rating": 5
+}
+
+<> 2025-03-14T133332.403.txt
+
+###
+
+GET http://localhost:8080/ratings/20
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133310.200.json
+
+###
+
+GET http://localhost:8080/recipes/89/ratings
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133301.200.json
+
+###
+
+POST http://localhost:8080/recipes/89/ratings
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 17
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "rating": 4
+}
+
+<> 2025-03-14T133245.500.txt
+
+###
+
+POST http://localhost:8080/recipes/151/ratings
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 17
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "rating": 4
+}
+
+<> 2025-03-14T133218.500.txt
+
+###
+
+GET http://localhost:8080/users/86/recipes
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133209.200.json
+
+###
+
+PUT http://localhost:8080/recipes/151
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 34
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "Incomplete Recipe"
+}
+
+<> 2025-03-14T133157.400.txt
+
+###
+
+PUT http://localhost:8080/recipes/151
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 209
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "Updated Recipe Title",
+  "description": "Updated description.",
+  "ingredients": "flour, sugar, eggs, milk",
+  "instructions": "mix, bake, cool, serve",
+  "image_url": "/images/test-recipe.jpg"
+}
+
+<> 2025-03-14T133152.403.txt
+
+###
+
+GET http://localhost:8080/recipes/151
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133135.200.json
+
+###
+
+GET http://localhost:8080/recipes
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T133133.200.json
+
+###
+
+POST http://localhost:8080/recipes
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 192
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "Test Recipe",
+  "description": "This is a test recipe.",
+  "ingredients": "flour, sugar, eggs",
+  "instructions": "mix, bake, serve",
+  "image_url": "/images/default-image.jpg"
+}
+
+<> 2025-03-14T133117.500.txt
+
+###
+
+POST http://localhost:8080/recipes
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 192
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "Test Recipe",
+  "description": "This is a test recipe.",
+  "ingredients": "flour, sugar, eggs",
+  "instructions": "mix, bake, serve",
+  "image_url": "/images/default-image.jpg"
+}
+
+<> 2025-03-14T133040.500.txt
+
+###
+
+DELETE http://localhost:8080/users/86
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+###
+
+PUT http://localhost:8080/users/86
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 86
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "not-an-email",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T133011.400.txt
+
+###
+
+PUT http://localhost:8080/users/86
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUzNDIsImV4cCI6MTc0MTk1ODk0Mn0.eUS20upnhBSFQUXnJ3pGMRwMZ29bPfyWFZ3gpvzocAI
+Content-Length: 93
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "updated@example.com",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T133001.200.txt
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 62
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+<> 2025-03-14T132902.200.json
+
+###
+
+PUT http://localhost:8080/users/82
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUyMzYsImV4cCI6MTc0MTk1ODgzNn0.Q5nxOqV6xvuyrZaQRvmBeCab4SCw3aOWqYm7MFhbpP4
+Content-Length: 86
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "not-an-email",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T132849.403.txt
+
+###
+
+PUT http://localhost:8080/users/82
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjg2LCJpYXQiOjE3NDE5NTUyMzYsImV4cCI6MTc0MTk1ODgzNn0.Q5nxOqV6xvuyrZaQRvmBeCab4SCw3aOWqYm7MFhbpP4
+Content-Length: 93
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "updated@example.com",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T132837.403.txt
+
+###
+
+GET http://localhost:8080/users/999999
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T132827.404.txt
+
+###
+
+GET http://localhost:8080/users/82
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T132825.200.json
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 62
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123"
+}
+
+<> 2025-03-14T132716.200.json
+
+###
+
+DELETE http://localhost:8080/users/82
+Authorization: Bearer <YOUR_ACCESS_TOKEN>
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2025-03-14T132647.400.txt
+
+###
+
+PUT http://localhost:8080/users/82
+Content-Type: application/json
+Authorization: Bearer <YOUR_ACCESS_TOKEN>
+Content-Length: 86
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "not-an-email",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T132638.400.txt
+
+###
+
+PUT http://localhost:8080/users/82
+Content-Type: application/json
+Authorization: Bearer <YOUR_ACCESS_TOKEN>
+Content-Length: 93
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "updatedUser",
+  "email": "updated@example.com",
+  "password": "Updated123"
+}
+
+<> 2025-03-14T132629.400.txt
+
+###
+
+GET http://localhost:8080/users/999999
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.4.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-03-14T132626.404.txt
+
+###
+
