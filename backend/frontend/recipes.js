@@ -6,6 +6,7 @@ const itemsPerPage = 12; // Number of recipes to show per page
 
 // We'll store the recipe ID that we're editing in a global variable
 let currentEditedRecipeId = null;
+let currentEditedRecipeImage = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Check if user previously enabled dark mode
@@ -239,6 +240,7 @@ async function editRecipe(recipeId) {
 
     // Store ID
     currentEditedRecipeId = recipeId;
+    currentEditedRecipeImage = recipe.image_url;
 
     // Show the modal
     const modalEl = document.getElementById("editRecipeModal");
@@ -272,6 +274,7 @@ async function updateRecipeFromModal() {
     description: newDescription,
     ingredients: newIngredients,
     instructions: newInstructions,
+    image_url: currentEditedRecipeImage || "/images/default.png"
   };
 
   try {

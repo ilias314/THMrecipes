@@ -64,7 +64,6 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
 
-
     // 📌 Verbindung testen
     client.getConnection(ar -> {
       if (ar.succeeded()) {
@@ -88,84 +87,553 @@ public class MainVerticle extends AbstractVerticle {
 
     router.route("/images/*").handler(StaticHandler.create("images"));
 
-
-
     router.route("/protected-route").handler(JWTAuthHandler.create(jwtProvider));
 
-    // Auth-Routen
+    // ============================================================
+    // Auth Routes
+    // ============================================================
+
+    /**
+     * @api {post} /register Register a new user
+     * @apiName RegisterUser
+     * @apiGroup Auth
+     *
+     * @apiParam {String} username User's unique username.
+     * @apiParam {String} email User's email address.
+     * @apiParam {String} password User's password. Must contain at least one uppercase letter and two digits.
+     *
+     * @apiSuccess (201) {String} message Confirmation message.
+     * @apiError (400) {String} message Missing required fields or invalid password.
+     * @apiError (500) {String} message Error during registration.
+     */
     router.post("/register").handler(this::register);
+
+    /**
+     * @api {post} /login User login
+     * @apiName LoginUser
+     * @apiGroup Auth
+     *
+     * @apiParam {String} email User's email address.
+     * @apiParam {String} password User's password.
+     *
+     * @apiSuccess {String} accessToken JWT access token.
+     * @apiSuccess {String} refreshToken JWT refresh token.
+     * @apiSuccess {Number} userId The user's ID.
+     * @apiError (401) {String} message Incorrect credentials or user not found.
+     */
     router.post("/login").handler(this::login);
+
+    /**
+     * @api {post} /logout User logout
+     * @apiName LogoutUser
+     * @apiGroup Auth
+     *
+     * @apiSuccess {String} message Logout confirmation.
+     */
     router.post("/logout").handler(this::logout);
 
-    // User routes
+    // ============================================================
+    // User Routes
+    // ============================================================
+
+    /**
+     * @api {post} /users Create a new user (Admin or self-registration)
+     * @apiName CreateUser
+     * @apiGroup User
+     *
+     * @apiParam {String} username User's username.
+     * @apiParam {String} email User's email.
+     * @apiParam {String} password User's password.
+     *
+     * @apiSuccess (201) {String} message User created successfully.
+     * @apiError (400) {String} message Missing required fields.
+     * @apiError (500) {String} message Error creating user.
+     */
     router.post("/users").handler(this::createUser);
+
+    /**
+     * @api {get} /users Get all users
+     * @apiName GetUsers
+     * @apiGroup User
+     *
+     * @apiSuccess {Object[]} users List of users.
+     * @apiSuccess {Number} users.id User ID.
+     * @apiSuccess {String} users.username Username.
+     * @apiSuccess {String} users.email Email address.
+     * @apiError (500) {String} message Error retrieving users.
+     */
     router.get("/users").handler(this::getAllUsers);
+
+    /**
+     * @api {get} /users/:id Get a user by ID
+     * @apiName GetUserById
+     * @apiGroup User
+     *
+     * @apiParam {Number} id User's unique ID.
+     *
+     * @apiSuccess {Number} id User ID.
+     * @apiSuccess {String} username Username.
+     * @apiSuccess {String} email Email address.
+     * @apiError (404) {String} message User not found.
+     */
     router.get("/users/:id").handler(this::getUserById);
+
+    /**
+     * @api {put} /users/:id Update user profile
+     * @apiName UpdateUser
+     * @apiGroup User
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id User's unique ID.
+     * @apiParam {String} username New username.
+     * @apiParam {String} email New email address.
+     * @apiParam {String} password New password (must contain at least one uppercase letter and two digits).
+     *
+     * @apiSuccess {String} message User updated successfully.
+     * @apiError (400) {String} message Missing required data or invalid input.
+     * @apiError (401) {String} message Unauthorized.
+     * @apiError (403) {String} message Forbidden – users can only update their own profile.
+     */
     router.put("/users/:id")
       .handler(JWTAuthHandler.create(jwtProvider))
       .handler(this::updateUser);
 
+    /**
+     * @api {delete} /users/:id Delete a user
+     * @apiName DeleteUser
+     * @apiGroup User
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id User's unique ID.
+     *
+     * @apiSuccess (204) No Content.
+     * @apiError (401) {String} message Unauthorized.
+     * @apiError (403) {String} message Forbidden – users can only delete their own account.
+     * @apiError (500) {String} message Error deleting user.
+     */
     router.delete("/users/:id")
       .handler(JWTAuthHandler.create(jwtProvider))
       .handler(this::deleteUser);
 
+    // ============================================================
+    // Recipe Routes
+    // ============================================================
 
-    // Recipe routes
     JWTAuthHandler jwtAuthHandler = JWTAuthHandler.create(jwtProvider);
     router.route("/recipes*").handler(jwtAuthHandler);
+
+    /**
+     * @api {post} /recipes Create a new recipe
+     * @apiName AddRecipe
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {String} title Recipe title.
+     * @apiParam {String} description Recipe description.
+     * @apiParam {String} ingredients Ingredients as a comma-separated string.
+     * @apiParam {String} instructions Instructions as a comma-separated string.
+     * @apiParam {String} [image_url] Optional image URL.
+     *
+     * @apiSuccess (201) {String} message Recipe created successfully.
+     * @apiError (400) {String} message Missing required fields.
+     * @apiError (500) {String} message Error saving recipe.
+     */
     router.post("/recipes").handler(this::addRecipe);
+
+    /**
+     * @api {get} /recipes Get all recipes
+     * @apiName GetRecipes
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     *
+     * @apiSuccess {Object[]} recipes List of recipes.
+     * @apiSuccess {Number} recipes.id Recipe ID.
+     * @apiSuccess {Number} recipes.user_id Creator's user ID.
+     * @apiSuccess {String} recipes.title Recipe title.
+     * @apiSuccess {String} recipes.description Recipe description.
+     * @apiSuccess {String} recipes.image_url Recipe image URL.
+     * @apiSuccess {String[]} recipes.ingredients List of ingredients.
+     * @apiSuccess {String[]} recipes.instructions List of instructions.
+     * @apiError (500) {String} message Error retrieving recipes.
+     */
     router.get("/recipes").handler(this::getAllRecipes);
+
+    /**
+     * @api {get} /recipes/:id Get recipe details
+     * @apiName GetRecipeById
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Recipe ID.
+     *
+     * @apiSuccess {Number} id Recipe ID.
+     * @apiSuccess {Number} user_id Creator's user ID.
+     * @apiSuccess {String} title Recipe title.
+     * @apiSuccess {String} description Recipe description.
+     * @apiSuccess {String} image_url Recipe image URL.
+     * @apiSuccess {String[]} ingredients Array of ingredients.
+     * @apiSuccess {String[]} instructions Array of instructions.
+     * @apiError (404) {String} message Recipe not found.
+     */
     router.get("/recipes/:id").handler(this::getRecipesById);
 
+    /**
+     * @api {put} /recipes/:id Update a recipe
+     * @apiName UpdateRecipe
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Recipe ID.
+     * @apiParam {String} title Updated title.
+     * @apiParam {String} description Updated description.
+     * @apiParam {String} ingredients Updated ingredients (comma-separated).
+     * @apiParam {String} instructions Updated instructions (comma-separated).
+     * @apiParam {String} [image_url] Optional updated image URL.
+     *
+     * @apiSuccess {String} message Recipe updated successfully.
+     * @apiError (400) {String} message Missing required fields.
+     * @apiError (403) {String} message Forbidden – users can only update their own recipes.
+     * @apiError (404) {String} message Recipe not found.
+     * @apiError (500) {String} message Error updating recipe.
+     */
     router.put("/recipes/:id")
       .handler(JWTAuthHandler.create(jwtProvider))
       .handler(this::updateRecipe);
 
+    /**
+     * @api {delete} /recipes/:id Delete a recipe
+     * @apiName DeleteRecipe
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Recipe ID.
+     *
+     * @apiSuccess {String} message Recipe deleted successfully.
+     * @apiError (403) {String} message Forbidden – users can only delete their own recipes.
+     * @apiError (404) {String} message Recipe not found.
+     * @apiError (500) {String} message Error deleting recipe.
+     */
     router.delete("/recipes/:id")
       .handler(JWTAuthHandler.create(jwtProvider))
       .handler(this::deleteRecipe);
 
-
+    /**
+     * @api {get} /users/:userId/recipes Get recipes by a specific user
+     * @apiName GetRecipesByUser
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} userId User's unique ID.
+     *
+     * @apiSuccess {Object[]} recipes List of recipes created by the user.
+     * @apiError (400) {String} message User ID is required.
+     * @apiError (500) {String} message Error retrieving user's recipes.
+     */
     router.get("/users/:userId/recipes").handler(this::getRecipesByUserId);
+
+    /**
+     * @api {get} /recipe/search Search for recipes
+     * @apiName SearchRecipes
+     * @apiGroup Recipe
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {String} q Search query string.
+     *
+     * @apiSuccess {Object[]} recipes List of recipes matching the query.
+     * @apiError (400) {String} message Missing or empty search query.
+     * @apiError (500) {String} message Error searching for recipes.
+     */
     router.get("/recipe/search").handler(this::searchRecipes);
 
-    // Add these routes to your start method
-
+    // ============================================================
+    // Rating Routes
+    // ============================================================
     router.route("/comments*").handler(jwtAuthHandler);
     router.route("/ratings*").handler(jwtAuthHandler);
 
-// Rating routes
+    /**
+     * @api {post} /recipes/:recipeId/ratings Add a rating to a recipe
+     * @apiName AddRating
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} recipeId Recipe ID.
+     * @apiParam {Number} rating Rating value (1-5).
+     *
+     * @apiSuccess (201) {String} message Rating added successfully.
+     * @apiError (400) {String} message Rating value is required or invalid.
+     * @apiError (500) {String} message Error adding rating.
+     */
     router.post("/recipes/:recipeId/ratings").handler(this::addRating);
+
+    /**
+     * @api {get} /recipes/:recipeId/ratings Get all ratings for a recipe
+     * @apiName GetRecipeRatings
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} recipeId Recipe ID.
+     *
+     * @apiSuccess {Object[]} ratings List of ratings.
+     * @apiSuccess {Number} ratings.id Rating ID.
+     * @apiSuccess {Number} ratings.userId User ID.
+     * @apiSuccess {Number} ratings.recipeId Recipe ID.
+     * @apiSuccess {Number} ratings.rating Rating value.
+     * @apiSuccess {String} ratings.createdAt Creation timestamp.
+     * @apiSuccess {String} ratings.username Username of the rater.
+     * @apiError (500) {String} message Error retrieving ratings.
+     */
     router.get("/recipes/:recipeId/ratings").handler(this::getRecipeRatings);
+
+    /**
+     * @api {get} /ratings/:id Get a rating by ID
+     * @apiName GetRatingById
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Rating ID.
+     *
+     * @apiSuccess {Number} id Rating ID.
+     * @apiSuccess {Number} userId User ID.
+     * @apiSuccess {Number} recipeId Recipe ID.
+     * @apiSuccess {Number} rating Rating value.
+     * @apiSuccess {String} createdAt Creation timestamp.
+     * @apiSuccess {String} username Username of the rater.
+     * @apiError (404) {String} message Rating not found.
+     */
     router.get("/ratings/:id").handler(this::getRatingById);
+
+    /**
+     * @api {put} /ratings/:id Update a rating
+     * @apiName UpdateRating
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Rating ID.
+     * @apiParam {Number} rating New rating value (1-5).
+     *
+     * @apiSuccess {Object} rating Updated rating object.
+     * @apiError (400) {String} message Missing or invalid rating value.
+     * @apiError (403) {String} message Forbidden – users can only update their own ratings.
+     * @apiError (404) {String} message Rating not found.
+     * @apiError (500) {String} message Error updating rating.
+     */
     router.put("/ratings/:id").handler(this::updateRating);
+
+    /**
+     * @api {delete} /ratings/:id Delete a rating
+     * @apiName DeleteRating
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Rating ID.
+     *
+     * @apiSuccess {String} message Rating deleted successfully.
+     * @apiError (403) {String} message Forbidden – users can only delete their own ratings.
+     * @apiError (404) {String} message Rating not found.
+     * @apiError (500) {String} message Error deleting rating.
+     */
     router.delete("/ratings/:id").handler(this::deleteRating);
+
+    /**
+     * @api {get} /users/:userId/ratings Get all ratings by a user
+     * @apiName GetUserRatings
+     * @apiGroup Rating
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} userId User ID.
+     *
+     * @apiSuccess {Object[]} ratings List of ratings by the user.
+     * @apiError (404) {String} message User not found.
+     * @apiError (500) {String} message Error retrieving user ratings.
+     */
     router.get("/users/:userId/ratings").handler(this::getUserRatings);
 
-// Comment routes
+    // ============================================================
+    // Comment Routes
+    // ============================================================
+    /**
+     * @api {post} /recipes/:recipeId/comments Add a comment to a recipe
+     * @apiName AddComment
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} recipeId Recipe ID.
+     * @apiParam {String} content Comment content.
+     *
+     * @apiSuccess (201) {Object} comment Created comment object.
+     * @apiError (400) {String} message Missing or empty comment content.
+     * @apiError (404) {String} message Recipe not found.
+     * @apiError (500) {String} message Error adding comment.
+     */
     router.post("/recipes/:recipeId/comments").handler(this::addComment);
+
+    /**
+     * @api {get} /recipes/:recipeId/comments Get all comments for a recipe
+     * @apiName GetRecipeComments
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} recipeId Recipe ID.
+     *
+     * @apiSuccess {Object[]} comments List of comments.
+     * @apiSuccess {Number} comments.id Comment ID.
+     * @apiSuccess {Number} comments.userId User ID.
+     * @apiSuccess {Number} comments.recipeId Recipe ID.
+     * @apiSuccess {String} comments.content Comment content.
+     * @apiSuccess {String} comments.createdAt Creation timestamp.
+     * @apiSuccess {String} comments.updatedAt Update timestamp.
+     * @apiSuccess {String} comments.username Username of the commenter.
+     * @apiError (404) {String} message Recipe not found.
+     * @apiError (500) {String} message Error retrieving comments.
+     */
     router.get("/recipes/:recipeId/comments").handler(this::getRecipeComments);
+
+    /**
+     * @api {get} /comments/:id Get a comment by ID
+     * @apiName GetCommentById
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Comment ID.
+     *
+     * @apiSuccess {Number} id Comment ID.
+     * @apiSuccess {Number} userId User ID.
+     * @apiSuccess {Number} recipeId Recipe ID.
+     * @apiSuccess {String} content Comment content.
+     * @apiSuccess {String} createdAt Creation timestamp.
+     * @apiSuccess {String} updatedAt Update timestamp.
+     * @apiSuccess {String} username Username of the commenter.
+     * @apiError (404) {String} message Comment not found.
+     */
     router.get("/comments/:id").handler(this::getCommentById);
+
+    /**
+     * @api {put} /comments/:id Update a comment
+     * @apiName UpdateComment
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Comment ID.
+     * @apiParam {String} content Updated comment content.
+     *
+     * @apiSuccess {Object} comment Updated comment object.
+     * @apiError (400) {String} message Missing or empty comment content.
+     * @apiError (403) {String} message Forbidden – users can only update their own comments.
+     * @apiError (404) {String} message Comment not found.
+     * @apiError (500) {String} message Error updating comment.
+     */
     router.put("/comments/:id").handler(this::updateComment);
+
+    /**
+     * @api {delete} /comments/:id Delete a comment
+     * @apiName DeleteComment
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} id Comment ID.
+     *
+     * @apiSuccess {String} message Comment deleted successfully.
+     * @apiError (403) {String} message Forbidden – users can only delete their own comments.
+     * @apiError (404) {String} message Comment not found.
+     * @apiError (500) {String} message Error deleting comment.
+     */
     router.delete("/comments/:id").handler(this::deleteComment);
+
+    /**
+     * @api {get} /users/:userId/comments Get all comments by a user
+     * @apiName GetUserComments
+     * @apiGroup Comment
+     *
+     * @apiHeader {String} Authorization Bearer token.
+     * @apiParam {Number} userId User's unique ID.
+     *
+     * @apiSuccess {Object[]} comments List of comments made by the user.
+     * @apiError (404) {String} message User not found.
+     * @apiError (500) {String} message Error retrieving comments.
+     */
     router.get("/users/:userId/comments").handler(this::getUserComments);
 
+    // ============================================================
+    // Token & File Routes
+    // ============================================================
+    /**
+     * @api {post} /refresh-token Refresh JWT access token
+     * @apiName RefreshToken
+     * @apiGroup Auth
+     *
+     * @apiParam {String} refreshToken Valid refresh token.
+     *
+     * @apiSuccess {String} accessToken New JWT access token.
+     * @apiError (400) {String} message Refresh token is required.
+     * @apiError (401) {String} message Invalid refresh token.
+     */
     router.post("/refresh-token").handler(this::refreshToken);
 
-    router.post("/upload").handler(BodyHandler.create().setUploadsDirectory("images")).handler(this::uploadImage);
+    /**
+     * @api {post} /upload Upload an image file
+     * @apiName UploadImage
+     * @apiGroup File
+     *
+     * @apiHeader {Content-Type} multipart/form-data
+     * @apiParam {File} file Image file to be uploaded.
+     *
+     * @apiSuccess {String} image_url URL of the saved image.
+     * @apiError (500) {String} message Error saving image.
+     */
+    router.post("/upload")
+      .handler(BodyHandler.create().setUploadsDirectory("images"))
+      .handler(this::uploadImage);
 
-    // Wishlist routes
+    // ============================================================
+    // Wishlist Routes
+    // ============================================================
+    /**
+     * @api {post} /wishlist Add a recipe to the wishlist
+     * @apiName AddToWishlist
+     * @apiGroup Wishlist
+     *
+     * @apiParam {Number} user_id User's ID.
+     * @apiParam {Number} recipe_id Recipe's ID.
+     *
+     * @apiSuccess (201) {String} message Added to wishlist.
+     * @apiError (409) {String} message Item is already in your wishlist.
+     * @apiError (400) {String} message Missing user_id or recipe_id.
+     * @apiError (500) {String} message Error adding to wishlist.
+     */
     router.post("/wishlist").handler(this::addToWishlist);
+
+    /**
+     * @api {get} /wishlist/:user_id Get a user's wishlist
+     * @apiName GetWishlist
+     * @apiGroup Wishlist
+     *
+     * @apiParam {Number} user_id User's ID.
+     *
+     * @apiSuccess {Object[]} wishlist List of recipes in the wishlist.
+     * @apiError (400) {String} message Invalid user ID.
+     * @apiError (500) {String} message Error retrieving wishlist.
+     */
     router.get("/wishlist/:user_id").handler(this::getWishlist);
+
+    /**
+     * @api {delete} /wishlist/:user_id/:recipe_id Remove a recipe from the wishlist
+     * @apiName RemoveFromWishlist
+     * @apiGroup Wishlist
+     *
+     * @apiParam {Number} user_id User's ID.
+     * @apiParam {Number} recipe_id Recipe's ID.
+     *
+     * @apiSuccess {String} message Removed from wishlist.
+     * @apiError (400) {String} message Invalid user ID or recipe ID.
+     * @apiError (500) {String} message Error removing from wishlist.
+     */
     router.delete("/wishlist/:user_id/:recipe_id").handler(this::removeFromWishlist);
 
-
-
-
-
-
-
-
+    // ============================================================
+    // Start HTTP Server
+    // ============================================================
     vertx.createHttpServer().requestHandler(router).listen(8080, http -> {
       if (http.succeeded()) {
         startPromise.complete();
@@ -177,7 +645,12 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  // 📌 CREATE: Benutzer erstellen
+  // ============================================================
+  // Handler Implementations
+  // ============================================================
+
+  // ----- User Handlers -----
+
   private void createUser(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
 
@@ -226,7 +699,6 @@ public class MainVerticle extends AbstractVerticle {
     return password.matches("^(?=.*[A-Z])(?=(.*\\d){2,}).{6,}$");
   }
 
-  // 📌 READ: Alle Benutzer abrufen
   private void getAllUsers(RoutingContext context) {
     client.query("SELECT id, username, email FROM users").execute(ar -> {
       if (ar.succeeded()) {
@@ -246,7 +718,6 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  // 📌 READ: Benutzer nach ID abrufen
   private void getUserById(RoutingContext context) {
     String id = context.pathParam("id");
     client.preparedQuery("SELECT id, username, email FROM users WHERE id = ?").execute(Tuple.of(Integer.parseInt(id)), ar -> {
@@ -304,22 +775,17 @@ public class MainVerticle extends AbstractVerticle {
     return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
   }
 
-  // 📌 DELETE: Benutzer löschen
   private void deleteUser(RoutingContext context) {
-    // Defensive check: if user is not set, respond with an unauthorized error.
     if (context.user() == null) {
       context.response().setStatusCode(401).end("Unauthorized: User not authenticated.");
       return;
     }
-
     String id = context.pathParam("id");
     Integer userIdFromToken = context.user().principal().getInteger("userId");
     if (!userIdFromToken.equals(Integer.parseInt(id))) {
       context.response().setStatusCode(403).end("Forbidden: You can only delete your own account.");
       return;
     }
-
-    // SQL queries to delete recipes and user
     String deleteRecipesQuery = "DELETE FROM recipes WHERE user_id = ?";
     String deleteUserQuery = "DELETE FROM users WHERE id = ?";
 
@@ -328,10 +794,8 @@ public class MainVerticle extends AbstractVerticle {
         SqlConnection connection = conn.result();
         connection.begin(tx -> {
           if (tx.succeeded()) {
-            // First, delete all recipes associated with the user
             connection.preparedQuery(deleteRecipesQuery).execute(Tuple.of(Integer.parseInt(id)), ar -> {
               if (ar.succeeded()) {
-                // Then, delete the user
                 connection.preparedQuery(deleteUserQuery).execute(Tuple.of(Integer.parseInt(id)), ar2 -> {
                   if (ar2.succeeded()) {
                     tx.result().commit(commit -> {
@@ -366,8 +830,8 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
+  // ----- Auth Handlers -----
 
-  // ✅ Benutzer registrieren
   private void register(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
     if (!isValidPassword(body.getString("password"))) {
@@ -376,10 +840,8 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Passwort muss mindestens einen Großbuchstaben und zwei Ziffern enthalten.").encode());
       return;
     }
-
     String hashedPassword = BCrypt.hashpw(body.getString("password"), BCrypt.gensalt());
     String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-
     client.preparedQuery(sql).execute(Tuple.of(body.getString("username"), body.getString("email"), hashedPassword), ar -> {
       if (ar.succeeded()) {
         context.response()
@@ -393,31 +855,23 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  // ✅ Benutzer-Login
   private void login(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
     String sql = "SELECT id, password FROM users WHERE email = ?";
-
     client.preparedQuery(sql).execute(Tuple.of(body.getString("email")), ar -> {
       if (ar.succeeded() && ar.result().size() > 0) {
         Row row = ar.result().iterator().next();
         String storedPassword = row.getString("password");
-
         if (BCrypt.checkpw(body.getString("password"), storedPassword)) {
           int userId = row.getInteger("id");
-
-          // Generate Access Token (short-lived)
           String accessToken = jwtProvider.generateToken(
             new JsonObject().put("userId", userId),
-            new JWTOptions().setExpiresInMinutes(60)  // Shorter expiration time
+            new JWTOptions().setExpiresInMinutes(60)
           );
-
-          // Generate Refresh Token (long-lived)
           String refreshToken = jwtProvider.generateToken(
             new JsonObject().put("userId", userId),
-            new JWTOptions().setExpiresInMinutes(1440)  // 24 hours
+            new JWTOptions().setExpiresInMinutes(1440)
           );
-
           context.response()
             .putHeader("Content-Type", "application/json")
             .end(new JsonObject()
@@ -434,18 +888,15 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
-
-  // ✅ Benutzer-Logout (nur Token löschen)
   private void logout(RoutingContext context) {
     context.response().setStatusCode(200).end("Erfolgreich abgemeldet.");
   }
 
-  // Recipe handlers
+  // ----- Recipe Handlers -----
+
   private void addRecipe(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
     int userId = context.user().principal().getInteger("userId");
-
     if (body == null || !body.containsKey("title") || !body.containsKey("description") ||
       !body.containsKey("ingredients") || !body.containsKey("instructions")) {
       context.response()
@@ -453,29 +904,18 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Missing required fields: title, description, ingredients, instructions.").encode());
       return;
     }
-
-    // Extract values as Strings
     String title = body.getString("title");
     String description = body.getString("description");
-
-    // ✅ Fix: Treat `ingredients` and `instructions` as Strings (not `JsonArray`)
-    String ingredients = body.getString("ingredients");  // No `JsonArray`, just a plain text string
-    String instructions = body.getString("instructions");  // No `JsonArray`, just a plain text string
-
-    // Image URL (set default if not provided)
+    String ingredients = body.getString("ingredients");
+    String instructions = body.getString("instructions");
     String imageUrl = body.containsKey("image_url") ? body.getString("image_url") : "/images/default.png";
-
-    // Debugging log
     System.out.println("📦 Received recipe data:");
     System.out.println("Title: " + title);
     System.out.println("Description: " + description);
     System.out.println("Ingredients (Plain Text): " + ingredients);
     System.out.println("Instructions (Plain Text): " + instructions);
     System.out.println("Image URL: " + imageUrl);
-
-    // SQL Query to insert the recipe
     String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url) VALUES (?, ?, ?, ?, ?, ?)";
-
     client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl), ar -> {
       if (ar.succeeded()) {
         System.out.println("✅ Recipe successfully saved: " + title);
@@ -491,15 +931,12 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
-
-
   private void getAllRecipes(RoutingContext context) {
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
         connection.query("SELECT * FROM recipes").execute(ar -> {
-          connection.close(); // Always close the connection
+          connection.close();
           if (ar.succeeded()) {
             JsonArray recipes = new JsonArray();
             ar.result().forEach(row -> {
@@ -510,18 +947,12 @@ public class MainVerticle extends AbstractVerticle {
                 .put("description", row.getString("description"))
                 .put("image_url", row.getString("image_url"))
                 .put("created_at", row.getLocalDateTime("created_at").toString());
-
-              // Parse ingredients and instructions from text to arrays
               String ingredientsText = row.getString("ingredients");
-              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*")))); // Trim spaces
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*"))));
               String instructionsText = row.getString("instructions");
-              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*")))); // Split by comma and optional spaces
-
-
-
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*"))));
               recipes.add(recipe);
             });
-
             context.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -544,8 +975,6 @@ public class MainVerticle extends AbstractVerticle {
 
   private void getRecipesById(RoutingContext context) {
     String id = context.pathParam("id");
-
-    // Validate recipe ID
     try {
       int recipeId = Integer.parseInt(id);
     } catch (NumberFormatException e) {
@@ -554,17 +983,14 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Invalid recipe ID: must be a number").encode());
       return;
     }
-
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
         connection.preparedQuery("SELECT * FROM recipes WHERE id = ?")
           .execute(Tuple.of(Integer.parseInt(id)), ar -> {
-            connection.close(); // Always close the connection
+            connection.close();
             if (ar.succeeded() && ar.result().size() > 0) {
               Row row = ar.result().iterator().next();
-
-              // Create a JsonObject for the recipe
               JsonObject recipe = new JsonObject()
                 .put("id", row.getInteger("id"))
                 .put("user_id", row.getInteger("user_id"))
@@ -572,15 +998,10 @@ public class MainVerticle extends AbstractVerticle {
                 .put("description", row.getString("description"))
                 .put("image_url", row.getString("image_url"))
                 .put("created_at", row.getLocalDateTime("created_at").toString());
-
-              // Parse ingredients and instructions from text to arrays
               String ingredientsText = row.getString("ingredients");
               String instructionsText = row.getString("instructions");
-              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*")))); // Trim spaces
-              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*")))); // Split by ". "
-
-
-              // Send the response
+              recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*"))));
+              recipe.put("instructions", new JsonArray(Arrays.asList(instructionsText.split(",\\s*"))));
               context.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
@@ -600,13 +1021,10 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  // Handler for updating a recipe
   private void updateRecipe(RoutingContext context) {
     String recipeId = context.pathParam("id");
     JsonObject body = context.getBodyAsJson();
     Integer userIdFromToken = context.user().principal().getInteger("userId");
-
-    // Validate required fields
     if (!body.containsKey("title") || !body.containsKey("description") ||
       !body.containsKey("ingredients") || !body.containsKey("instructions")) {
       context.response()
@@ -614,22 +1032,16 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Missing required fields: title, description, ingredients, instructions.").encode());
       return;
     }
-
-    // Check if the recipe exists and belongs to the user
     String checkOwnershipQuery = "SELECT user_id FROM recipes WHERE id = ?";
     client.preparedQuery(checkOwnershipQuery).execute(Tuple.of(Integer.parseInt(recipeId)), checkResult -> {
       if (checkResult.succeeded() && checkResult.result().size() > 0) {
         int ownerId = checkResult.result().iterator().next().getInteger("user_id");
-
-        // Ensure the user owns the recipe
         if (ownerId != userIdFromToken) {
           context.response()
             .setStatusCode(403)
             .end(new JsonObject().put("message", "Forbidden: You can only modify your own recipes.").encode());
           return;
         }
-
-        // Proceed with update
         String updateQuery = "UPDATE recipes SET title = ?, description = ?, ingredients = ?, instructions = ?, image_url = ? WHERE id = ?";
         Tuple params = Tuple.of(
           body.getString("title", ""),
@@ -639,7 +1051,6 @@ public class MainVerticle extends AbstractVerticle {
           body.getString("image_url", "/images/default.png"),
           Integer.parseInt(recipeId)
         );
-
         client.preparedQuery(updateQuery).execute(params, updateResult -> {
           if (updateResult.succeeded()) {
             context.response()
@@ -660,24 +1071,17 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
-
-  // Handler for deleting a recipe
   private void deleteRecipe(RoutingContext routingContext) {
     String recipeId = routingContext.pathParam("id");
     Integer userIdFromToken = routingContext.user().principal().getInteger("userId");
-
     String checkOwnershipQuery = "SELECT user_id FROM recipes WHERE id = ?";
     client.preparedQuery(checkOwnershipQuery).execute(Tuple.of(Integer.parseInt(recipeId)), checkResult -> {
       if (checkResult.succeeded() && checkResult.result().size() > 0) {
         int ownerId = checkResult.result().iterator().next().getInteger("user_id");
-
-        // Ensure the user owns the recipe
         if (ownerId != userIdFromToken) {
           routingContext.response().setStatusCode(403).end("Forbidden: You can only delete your own recipes.");
           return;
         }
-
         String deleteQuery = "DELETE FROM recipes WHERE id = ?";
         client.preparedQuery(deleteQuery).execute(Tuple.of(Integer.parseInt(recipeId)), deleteResult -> {
           if (deleteResult.succeeded()) {
@@ -692,7 +1096,6 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
   private void getRecipesByUserId(RoutingContext routingContext) {
     String userId = routingContext.request().getParam("userId");
     if (userId == null || userId.isEmpty()) {
@@ -701,7 +1104,6 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "User ID is required").encode());
       return;
     }
-
     client.getConnection(conn -> {
       if (conn.succeeded()) {
         SqlConnection connection = conn.result();
@@ -711,7 +1113,6 @@ public class MainVerticle extends AbstractVerticle {
             if (ar.succeeded()) {
               RowSet<Row> rows = ar.result();
               List<Rezept> recipes = new ArrayList<>();
-
               for (Row row : rows) {
                 Rezept rezept = new Rezept();
                 rezept.setId(row.getInteger("id"));
@@ -722,13 +1123,8 @@ public class MainVerticle extends AbstractVerticle {
                 rezept.setInstructions(Arrays.asList(row.getString("instructions").split(",\\s*")));
                 rezept.setImageUrl(row.getString("image_url"));
                 rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
-
-                // NEW: Set the image URL from the DB column "image_url"
-
-
                 recipes.add(rezept);
               }
-
               routingContext.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
@@ -743,9 +1139,7 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
   private void searchRecipes(RoutingContext context) {
-    // Get the search query from the request
     List<String> queryParams = context.queryParam("q");
     if (queryParams.isEmpty()) {
       context.response()
@@ -753,7 +1147,6 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Search query parameter 'q' is required").encode());
       return;
     }
-
     String query = queryParams.get(0).trim();
     if (query.isEmpty()) {
       context.response()
@@ -761,17 +1154,11 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Search query cannot be empty").encode());
       return;
     }
-
-    // SQL query to search for recipes by title or ingredients
     String sql = "SELECT * FROM recipes WHERE title LIKE ? OR ingredients LIKE ?";
-
-    // Use the MySQL client to execute the query
     client.preparedQuery(sql).execute(Tuple.of("%" + query + "%", "%" + query + "%"), ar -> {
       if (ar.succeeded()) {
         RowSet<Row> rows = ar.result();
         List<Rezept> recipes = new ArrayList<>();
-
-        // Map rows to Rezept objects
         for (Row row : rows) {
           Rezept rezept = new Rezept();
           rezept.setId(row.getInteger("id"));
@@ -783,14 +1170,11 @@ public class MainVerticle extends AbstractVerticle {
           rezept.setCreatedAt(row.getLocalDateTime("created_at").toString());
           recipes.add(rezept);
         }
-
-        // Return the recipes as JSON
         context.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(Json.encodePrettily(recipes));
       } else {
-        // Handle database errors
         System.err.println("❌ Error searching recipes: " + ar.cause().getMessage());
         context.response()
           .setStatusCode(500)
@@ -798,15 +1182,13 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
   private void addRating(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
-
-    // Safely parse the rating value
     Integer ratingValue;
     try {
-      ratingValue = body.getInteger("rating"); // Try to get as integer
+      ratingValue = body.getInteger("rating");
       if (ratingValue == null) {
-        // If not an integer, try to parse as string
         String ratingStr = body.getString("rating");
         if (ratingStr != null) {
           ratingValue = Integer.parseInt(ratingStr);
@@ -823,20 +1205,14 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Invalid rating format. Rating must be a number.").encode());
       return;
     }
-
-    // Validate the rating value (1-5)
     if (ratingValue < 1 || ratingValue > 5) {
       context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Rating must be between 1 and 5").encode());
       return;
     }
-
-    // Get the authenticated user ID
     Integer userId = context.user().principal().getInteger("userId");
     String recipeId = context.pathParam("recipeId");
-
-    // Insert the rating into the database
     String sql = "INSERT INTO ratings (user_id, recipe_id, rating) VALUES (?, ?, ?)";
     client.preparedQuery(sql).execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue), ar -> {
       if (ar.succeeded()) {
@@ -850,9 +1226,9 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
   }
+
   private void getRecipeRatings(RoutingContext context) {
     String recipeId = context.pathParam("recipeId");
-
     client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.recipe_id = ?")
       .execute(Tuple.of(Integer.parseInt(recipeId)), ar -> {
         if (ar.succeeded()) {
@@ -867,8 +1243,6 @@ public class MainVerticle extends AbstractVerticle {
               .put("username", row.getString("username"));
             ratings.add(rating);
           });
-
-          // Return an empty array if no ratings are found
           if (ratings.isEmpty()) {
             context.response()
               .putHeader("content-type", "application/json")
@@ -885,9 +1259,9 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void getRatingById(RoutingContext context) {
     String id = context.pathParam("id");
-
     client.preparedQuery("SELECT r.*, u.username FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.id = ?")
       .execute(Tuple.of(Integer.parseInt(id)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
@@ -899,7 +1273,6 @@ public class MainVerticle extends AbstractVerticle {
             .put("rating", row.getInteger("rating"))
             .put("createdAt", row.getLocalDateTime("created_at").toString())
             .put("username", row.getString("username"));
-
           context.response()
             .putHeader("content-type", "application/json")
             .end(rating.encode());
@@ -910,18 +1283,17 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void updateRating(RoutingContext context) {
     String id = context.pathParam("id");
     Integer userId = context.user().principal().getInteger("userId");
     JsonObject body = context.getBodyAsJson();
-
     if (body == null || !body.containsKey("rating")) {
       context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Rating value is required").encode());
       return;
     }
-
     Integer ratingValue = body.getInteger("rating");
     if (ratingValue == null || ratingValue < 1 || ratingValue > 5) {
       context.response()
@@ -929,21 +1301,16 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Rating must be between 1 and 5").encode());
       return;
     }
-
-    // Check if rating exists and user is the owner
     client.preparedQuery("SELECT user_id FROM ratings WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(id)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
           Integer ratingUserId = ar.result().iterator().next().getInteger("user_id");
-
           if (!userId.equals(ratingUserId)) {
             context.response()
               .setStatusCode(403)
               .end(new JsonObject().put("message", "You can only update your own ratings").encode());
             return;
           }
-
-          // Update the rating
           client.preparedQuery("UPDATE ratings SET rating = ? WHERE id = ?")
             .execute(Tuple.of(ratingValue, Integer.parseInt(id)), updateResult -> {
               if (updateResult.succeeded()) {
@@ -958,7 +1325,6 @@ public class MainVerticle extends AbstractVerticle {
                         .put("rating", row.getInteger("rating"))
                         .put("createdAt", row.getLocalDateTime("created_at").toString())
                         .put("username", row.getString("username"));
-
                       context.response()
                         .putHeader("content-type", "application/json")
                         .end(rating.encode());
@@ -981,24 +1347,20 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void deleteRating(RoutingContext context) {
     String id = context.pathParam("id");
     Integer userId = context.user().principal().getInteger("userId");
-
-    // Check if rating exists and user is the owner
     client.preparedQuery("SELECT user_id FROM ratings WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(id)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
           Integer ratingUserId = ar.result().iterator().next().getInteger("user_id");
-
           if (!userId.equals(ratingUserId)) {
             context.response()
               .setStatusCode(403)
               .end(new JsonObject().put("message", "You can only delete your own ratings").encode());
             return;
           }
-
-          // Delete the rating
           client.preparedQuery("DELETE FROM ratings WHERE id = ?")
             .execute(Tuple.of(Integer.parseInt(id)), deleteResult -> {
               if (deleteResult.succeeded()) {
@@ -1018,10 +1380,9 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void getUserRatings(RoutingContext context) {
     String userId = context.pathParam("userId");
-
-    // Check if user exists
     client.preparedQuery("SELECT id FROM users WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
         if (userCheck.succeeded() && userCheck.result().size() > 0) {
@@ -1039,7 +1400,6 @@ public class MainVerticle extends AbstractVerticle {
                     .put("createdAt", row.getLocalDateTime("created_at").toString());
                   ratings.add(rating);
                 });
-
                 context.response()
                   .putHeader("content-type", "application/json")
                   .end(new JsonArray(ratings).encode());
@@ -1056,19 +1416,17 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void addComment(RoutingContext context) {
     Integer userId = context.user().principal().getInteger("userId");
     String recipeId = context.pathParam("recipeId");
     JsonObject body = context.getBodyAsJson();
-
-    // Validate input
     if (body == null || !body.containsKey("content")) {
       context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Comment content is required").encode());
       return;
     }
-
     String content = body.getString("content");
     if (content == null || content.trim().isEmpty()) {
       context.response()
@@ -1076,34 +1434,26 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Comment content cannot be empty").encode());
       return;
     }
-
-    // Check if recipe exists
     client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
         if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
-          // Insert new comment
           client.preparedQuery("INSERT INTO comments (user_id, recipe_id, content) VALUES (?, ?, ?)")
             .execute(Tuple.of(userId, Integer.parseInt(recipeId), content), ar -> {
               if (ar.succeeded()) {
-                // Get the new comment ID
                 client.preparedQuery("SELECT LAST_INSERT_ID() as id")
                   .execute(idResult -> {
                     if (idResult.succeeded() && idResult.result().size() > 0) {
                       Integer newId = idResult.result().iterator().next().getInteger("id");
-
-                      // Get the username for display
                       client.preparedQuery("SELECT username FROM users WHERE id = ?")
                         .execute(Tuple.of(userId), userResult -> {
                           if (userResult.succeeded() && userResult.result().size() > 0) {
                             String username = userResult.result().iterator().next().getString("username");
-
                             Comments comment = new Comments();
                             comment.setId(newId);
                             comment.setUserId(userId);
                             comment.setRecipeId(Integer.parseInt(recipeId));
                             comment.setContent(content);
                             comment.setUsername(username);
-
                             context.response()
                               .setStatusCode(201)
                               .putHeader("content-type", "application/json")
@@ -1133,10 +1483,9 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void getRecipeComments(RoutingContext context) {
     String recipeId = context.pathParam("recipeId");
-
-    // Check if recipe exists
     client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
         if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
@@ -1155,7 +1504,6 @@ public class MainVerticle extends AbstractVerticle {
                     .put("username", row.getString("username"));
                   comments.add(comment);
                 });
-
                 context.response()
                   .putHeader("content-type", "application/json")
                   .end(new JsonArray(comments).encode());
@@ -1172,9 +1520,9 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void getCommentById(RoutingContext context) {
     String id = context.pathParam("id");
-
     client.preparedQuery("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?")
       .execute(Tuple.of(Integer.parseInt(id)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
@@ -1187,7 +1535,6 @@ public class MainVerticle extends AbstractVerticle {
             .put("createdAt", row.getLocalDateTime("created_at").toString())
             .put("updatedAt", row.getLocalDateTime("updated_at").toString())
             .put("username", row.getString("username"));
-
           context.response()
             .putHeader("content-type", "application/json")
             .end(comment.encode());
@@ -1198,19 +1545,17 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void updateComment(RoutingContext context) {
     String commentId = context.pathParam("id");
     Integer userId = context.user().principal().getInteger("userId");
     JsonObject body = context.getBodyAsJson();
-
-    // Validate input
     if (body == null || !body.containsKey("content")) {
       context.response()
         .setStatusCode(400)
         .end(new JsonObject().put("message", "Comment content is required").encode());
       return;
     }
-
     String content = body.getString("content");
     if (content == null || content.trim().isEmpty()) {
       context.response()
@@ -1218,25 +1563,19 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Comment content cannot be empty").encode());
       return;
     }
-
-    // Check if the comment exists and belongs to the user
     client.preparedQuery("SELECT user_id FROM comments WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(commentId)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
           Integer commentUserId = ar.result().iterator().next().getInteger("user_id");
-
           if (!userId.equals(commentUserId)) {
             context.response()
               .setStatusCode(403)
               .end(new JsonObject().put("message", "You can only update your own comments").encode());
             return;
           }
-
-          // Update the comment
           String sql = "UPDATE comments SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
           client.preparedQuery(sql).execute(Tuple.of(content, Integer.parseInt(commentId)), updateResult -> {
             if (updateResult.succeeded()) {
-              // Fetch the updated comment
               client.preparedQuery("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?")
                 .execute(Tuple.of(Integer.parseInt(commentId)), fetchResult -> {
                   if (fetchResult.succeeded() && fetchResult.result().size() > 0) {
@@ -1249,7 +1588,6 @@ public class MainVerticle extends AbstractVerticle {
                       .put("createdAt", row.getLocalDateTime("created_at").toString())
                       .put("updatedAt", row.getLocalDateTime("updated_at").toString())
                       .put("username", row.getString("username"));
-
                     context.response()
                       .setStatusCode(200)
                       .putHeader("content-type", "application/json")
@@ -1273,24 +1611,20 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void deleteComment(RoutingContext context) {
     String commentId = context.pathParam("id");
     Integer userId = context.user().principal().getInteger("userId");
-
-    // Check if the comment exists and belongs to the user
     client.preparedQuery("SELECT user_id FROM comments WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(commentId)), ar -> {
         if (ar.succeeded() && ar.result().size() > 0) {
           Integer commentUserId = ar.result().iterator().next().getInteger("user_id");
-
           if (!userId.equals(commentUserId)) {
             context.response()
               .setStatusCode(403)
               .end(new JsonObject().put("message", "You can only delete your own comments").encode());
             return;
           }
-
-          // Delete the comment
           String sql = "DELETE FROM comments WHERE id = ?";
           client.preparedQuery(sql).execute(Tuple.of(Integer.parseInt(commentId)), deleteResult -> {
             if (deleteResult.succeeded()) {
@@ -1310,10 +1644,9 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void getUserComments(RoutingContext context) {
     String userId = context.pathParam("userId");
-
-    // Validate the user ID
     try {
       int id = Integer.parseInt(userId);
     } catch (NumberFormatException e) {
@@ -1322,12 +1655,9 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("message", "Invalid user ID: must be a number").encode());
       return;
     }
-
-    // Check if the user exists
     client.preparedQuery("SELECT id FROM users WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
         if (userCheck.succeeded() && userCheck.result().size() > 0) {
-          // Fetch all comments by the user
           String sql = "SELECT c.*, r.title AS recipe_title FROM comments c JOIN recipes r ON c.recipe_id = r.id WHERE c.user_id = ? ORDER BY c.created_at DESC";
           client.preparedQuery(sql).execute(Tuple.of(Integer.parseInt(userId)), ar -> {
             if (ar.succeeded()) {
@@ -1341,10 +1671,8 @@ public class MainVerticle extends AbstractVerticle {
                   .put("content", row.getString("content"))
                   .put("createdAt", row.getLocalDateTime("created_at").toString())
                   .put("updatedAt", row.getLocalDateTime("updated_at").toString());
-
                 comments.add(comment);
               });
-
               context.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
@@ -1362,14 +1690,12 @@ public class MainVerticle extends AbstractVerticle {
         }
       });
   }
+
   private void uploadImage(RoutingContext context) {
     context.fileUploads().forEach(file -> {
       String uploadedFileName = file.uploadedFileName();
-      // Generate a unique file name by appending the current timestamp
       String targetFileName = "images/" + System.currentTimeMillis() + "-" + file.fileName();
-
       System.out.println("📤 Bild wird gespeichert unter: " + targetFileName);
-
       vertx.fileSystem().move(uploadedFileName, targetFileName, res -> {
         if (res.succeeded()) {
           String imageUrl = "/" + targetFileName;
@@ -1387,36 +1713,30 @@ public class MainVerticle extends AbstractVerticle {
 
   private void refreshToken(RoutingContext context) {
     JsonObject body = context.getBodyAsJson();
-
     if (body == null || !body.containsKey("refreshToken")) {
       context.response().setStatusCode(400).end(new JsonObject().put("message", "Refresh Token is required").encode());
       return;
     }
-
     String refreshToken = body.getString("refreshToken");
-
-    // Verify the refresh token
     jwtProvider.authenticate(new JsonObject().put("token", refreshToken), authResult -> {
       if (authResult.succeeded()) {
         JsonObject userPrincipal = authResult.result().principal();
         int userId = userPrincipal.getInteger("userId");
-
-        // Generate a new Access Token
         String newAccessToken = jwtProvider.generateToken(
           new JsonObject().put("userId", userId),
           new JWTOptions().setExpiresInMinutes(60)
         );
-
         context.response().setStatusCode(200).end(new JsonObject().put("accessToken", newAccessToken).encode());
       } else {
         context.response().setStatusCode(401).end(new JsonObject().put("message", "Invalid refresh token").encode());
       }
     });
   }
-  // Rezept zur Wunschliste hinzufügen
+
+  // ----- Wishlist Handlers -----
+
   private void addToWishlist(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
-
     if (!body.containsKey("user_id") || !body.containsKey("recipe_id")) {
       ctx.response()
         .setStatusCode(400)
@@ -1424,25 +1744,18 @@ public class MainVerticle extends AbstractVerticle {
         .end(new JsonObject().put("error", "Missing user_id or recipe_id").encode());
       return;
     }
-
     int userId = body.getInteger("user_id");
     int recipeId = body.getInteger("recipe_id");
-
-    // Zuerst prüfen, ob das Rezept bereits in der Wishlist ist
     String checkQuery = "SELECT COUNT(*) AS count FROM wishlist WHERE user_id = ? AND recipe_id = ?";
-
     client.preparedQuery(checkQuery).execute(Tuple.of(userId, recipeId), checkResult -> {
       if (checkResult.succeeded()) {
         int count = checkResult.result().iterator().next().getInteger("count");
-
         if (count > 0) {
-          // Rezept ist bereits in der Wishlist
           ctx.response()
-            .setStatusCode(409) // Conflict-Statuscode
+            .setStatusCode(409)
             .putHeader("Content-Type", "application/json")
             .end(new JsonObject().put("message", "Item is already in your wishlist").encode());
         } else {
-          // Rezept zur Wishlist hinzufügen
           String insertQuery = "INSERT INTO wishlist (user_id, recipe_id) VALUES (?, ?)";
           client.preparedQuery(insertQuery).execute(Tuple.of(userId, recipeId))
             .onSuccess(res -> ctx.response()
@@ -1466,14 +1779,10 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-
-  // Wunschliste für einen Benutzer abrufen
   private void getWishlist(RoutingContext ctx) {
     String userIdParam = ctx.pathParam("user_id");
-
     try {
       int userId = Integer.parseInt(userIdParam);
-
       String query = "SELECT r.id, r.title, r.description, r.image_url FROM wishlist w JOIN recipes r ON w.recipe_id = r.id WHERE w.user_id = ?";
       client.preparedQuery(query).execute(Tuple.of(userId), res -> {
         if (res.succeeded()) {
@@ -1496,16 +1805,12 @@ public class MainVerticle extends AbstractVerticle {
     }
   }
 
-  // Rezept aus Wunschliste entfernen
-
   private void removeFromWishlist(RoutingContext ctx) {
     String userIdParam = ctx.pathParam("user_id");
     String recipeIdParam = ctx.pathParam("recipe_id");
-
     try {
       int userId = Integer.parseInt(userIdParam);
       int recipeId = Integer.parseInt(recipeIdParam);
-
       String query = "DELETE FROM wishlist WHERE user_id = ? AND recipe_id = ?";
       client.preparedQuery(query).execute(Tuple.of(userId, recipeId), res -> {
         if (res.succeeded()) {
@@ -1518,8 +1823,4 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().setStatusCode(400).end(new JsonObject().put("message", "Invalid user ID or recipe ID").encode());
     }
   }
-
-
-
-
 }
