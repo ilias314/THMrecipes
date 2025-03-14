@@ -26,6 +26,12 @@
         <li class="nav-item"><a class="nav-link" href="wishlist.html">Wishlist</a></li>
         <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
         <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+        <!-- Dark Mode Toggle Button -->
+        <li class="nav-item">
+          <button class="btn btn-sm btn-outline-light ms-3" id="darkModeBtn" onclick="toggleDarkMode()">
+            <i id="darkModeIcon" class="fas fa-moon"></i>
+          </button>
+        </li>
       </ul>
     </div>
   </div>
@@ -56,10 +62,9 @@
       <i class="fas fa-chevron-right"></i>
     </button>
   </div>
-
 </div>
 
-<!-- Edit Recipe Modal (matches the design from recipe-detail page) -->
+<!-- Edit Recipe Modal -->
 <div class="modal fade" id="editRecipeModal" tabindex="-1" aria-labelledby="editRecipeModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -89,15 +94,13 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="updateRecipeFromModal()">
-          Save Changes
-        </button>
+        <button type="button" class="btn btn-primary" onclick="updateRecipeFromModal()">Save Changes</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Delete Confirmation Modal (matches recipe-detail page) -->
+<!-- Confirmation Modal -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -116,7 +119,7 @@
   </div>
 </div>
 
-<!-- Custom Toast Container for notifications -->
+<!-- Custom Toast Container -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 <!-- Footer -->
@@ -129,13 +132,12 @@
 <script src="recipes.js"></script>
 <script src="auth.js"></script>
 <script>
-  // Global Confirmation Dialog Helper Function
+  // Global Confirmation Dialog Helper
   function showConfirmationDialog(message, onConfirm) {
     const modalElement = document.getElementById('confirmationModal');
     const messageElement = document.getElementById('confirmationMessage');
     const confirmButton = document.getElementById('confirmButton');
     messageElement.textContent = message;
-    // Replace previous event listeners
     const newConfirmButton = confirmButton.cloneNode(true);
     confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
     newConfirmButton.addEventListener('click', () => {
@@ -147,7 +149,7 @@
     confirmationModal.show();
   }
 
-  // Global Toast Function for notifications
+  // Global Toast Function
   function showCustomToast(message, type = "success") {
     const container = document.getElementById("toastContainer");
     if (!container) return;

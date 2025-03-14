@@ -28,7 +28,6 @@ body {
   font-family: 'Open Sans', sans-serif;
   margin: 0;
   padding-top: 30px;
-  /* Default background for pages without bg-image */
   background-color: var(--beige);
   color: var(--navy);
 }
@@ -111,7 +110,7 @@ footer p {
   background: url("default-image.jpg") center/cover no-repeat;
   min-height: calc(100vh - 50px);
   position: relative;
-  margin-top: 50px; /* for fixed navbar */
+  margin-top: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -145,7 +144,6 @@ footer p {
   box-shadow: 0 2px 8px rgba(0, 31, 63, 0.4);
   margin-bottom: 30px;
 }
-
 .card-header {
   background-color: var(--navy);
   color: var(--yellow);
@@ -153,7 +151,6 @@ footer p {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
-
 .card-img-top {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
@@ -251,7 +248,6 @@ footer p {
   cursor: not-allowed;
 }
 
-/* For the advanced pagination approach you had: custom buttons: */
 .btn.custom-pagination-btn {
   border-radius: 15px;
   border: 1px solid var(--navy);
@@ -268,39 +264,32 @@ footer p {
   cursor: not-allowed;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .hero-section h1 {
-    font-size: 2rem;
-  }
-  .hero-section p {
-    font-size: 1rem;
-  }
-  .navbar .navbar-brand {
-    font-size: 1.4rem;
-  }
-  .card {
-    margin-bottom: 20px;
-  }
-  .container {
-    padding: 0 15px;
-  }
+/* === Dark Mode Overrides === */
+body.dark-mode {
+  /* Use your navy (#001f3f) for the main background */
+  background-color: #001f3f;
+  color: #f5f5f5; /* Light text for contrast */
+
+  /* Optionally override the color variables if desired */
+  --navy: #001f3f;      /* Keep "navy" truly navy */
+  --yellow: #ffc20a;    /* Slightly different yellow if you want */
+  --beige: #003059;     /* Another brand-ish color if needed */
 }
 
-@media (max-width: 576px) {
-  body {
-    font-size: 14px;
-  }
-  .navbar .navbar-brand {
-    font-size: 1.2rem;
-  }
-  .card {
-    margin: 10px;
-  }
-  .container {
-    padding: 0 10px;
-  }
-  .hero-section {
-    padding: 1rem;
-  }
+/* Card background in dark mode can be a slightly lighter or darker shade */
+body.dark-mode .card {
+  background-color: #002b4f;
+  color: #f5f5f5;
 }
+
+/* Navbar in dark mode if you want it the same navy or darker */
+body.dark-mode .navbar {
+  background: #000f2d; /* Or keep #001f3f, whichever you like */
+}
+
+/* Card header in dark mode */
+body.dark-mode .card-header {
+  background-color: #000f2d;
+  color: #ffc20a;
+}
+

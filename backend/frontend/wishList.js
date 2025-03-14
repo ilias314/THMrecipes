@@ -1,8 +1,7 @@
 /**
- * @file wishList.js
- * @description Manages the user's wishlist: displaying, adding, and removing recipes.
+ * wishList.js
+ * Manages the user's wishlist: displaying, adding, and removing recipes.
  */
-
 const API_URL = "http://localhost:8080";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -21,7 +20,7 @@ async function loadWishlist() {
   try {
     const response = await fetch(`${API_URL}/wishlist/${userId}`, {
       method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (!response.ok) throw new Error("Failed to fetch wishlist");
@@ -49,21 +48,21 @@ function displayWishlist(wishlist) {
       : "default-image.jpg";
 
     wishlistContainer.innerHTML += `
-        <div class="col-md-4 mb-4">
-          <div class="card shadow-sm">
-            <img src="${imageUrl}" class="card-img-top" alt="${recipe.title}" onerror="this.src='default-image.jpg';">
-            <div class="card-body">
-              <h5 class="card-title">${recipe.title}</h5>
-              <p class="card-text">${recipe.description || ''}</p>
-              <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">
-                <i class="fas fa-eye"></i> View
-              </a>
-              <button class="btn btn-danger" onclick="removeFromWishlist(${recipe.id})">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+          <img src="${imageUrl}" class="card-img-top" alt="${recipe.title}" onerror="this.src='default-image.jpg';">
+          <div class="card-body">
+            <h5 class="card-title">${recipe.title}</h5>
+            <p class="card-text">${recipe.description || ''}</p>
+            <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary mb-2">
+              <i class="fas fa-eye"></i> View
+            </a>
+            <button class="btn btn-danger" onclick="removeFromWishlist(${recipe.id})">
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
-        </div>`;
+        </div>
+      </div>`;
   });
 }
 
@@ -79,7 +78,7 @@ async function removeFromWishlist(recipeId) {
   try {
     const response = await fetch(`${API_URL}/wishlist/${userId}/${recipeId}`, {
       method: "DELETE",
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (response.ok) {

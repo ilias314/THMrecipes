@@ -4,6 +4,15 @@ let currentCommentId = null;
 let currentRatingId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Reapply Dark Mode if user had it on
+  const isDarkMode = localStorage.getItem('darkModeEnabled') === 'true';
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    const btn = document.getElementById('darkModeBtn');
+    if (btn) btn.textContent = 'Light Mode';
+  }
+
+  // Then proceed with loading the recipe details
   const urlParams = new URLSearchParams(window.location.search);
   const recipeId = urlParams.get("id");
 
@@ -34,6 +43,19 @@ document.addEventListener("DOMContentLoaded", () => {
     showCustomToast("Recipe ID not found.", "danger");
   }
 });
+
+/** Toggle Dark/Light mode for detail page. */
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
+
+  const btn = document.getElementById('darkModeBtn');
+  if (btn) {
+    btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
+
+  localStorage.setItem('darkModeEnabled', isDark ? 'true' : 'false');
+}
 
 async function fetchRecipeDetails(recipeId) {
   const token = localStorage.getItem("accessToken");

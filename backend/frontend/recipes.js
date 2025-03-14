@@ -8,8 +8,32 @@ const itemsPerPage = 12; // Number of recipes to show per page
 let currentEditedRecipeId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Check if user previously enabled dark mode
+  const isDarkMode = localStorage.getItem('darkModeEnabled') === 'true';
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    const btn = document.getElementById('darkModeBtn');
+    if (btn) btn.textContent = 'Light Mode';
+  }
+
   loadRecipes(currentPage);
 });
+
+/** Toggle Dark/Light mode */
+function toggleDarkMode() {
+  const body = document.body;
+  body.classList.toggle('dark-mode');
+  const isDark = body.classList.contains('dark-mode');
+
+  // Update button text
+  const btn = document.getElementById('darkModeBtn');
+  if (btn) {
+    btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
+
+  // Save preference
+  localStorage.setItem('darkModeEnabled', isDark ? 'true' : 'false');
+}
 
 async function loadRecipes(page) {
   const token = localStorage.getItem("accessToken");
@@ -154,20 +178,17 @@ function getStarsHtml(average) {
   return stars;
 }
 
-/**
- * Renders the pagination controls (Previous, Next) at the bottom.
- */
 function renderPaginationControls(totalPages, currentPage) {
   const paginationContainer = document.getElementById("pagination-container");
   if (!paginationContainer) return;
 
   paginationContainer.innerHTML = `
-    <button class="btn-outline-primary me-2" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>
-      <i class="fas fa-chevron-left"></i>
+    <button class="btn btn-outline-primary" id="prevPage" ${currentPage === 1 ? "disabled" : ""}>
+      <i class="fas fa-chevron-left"></i> Previous
     </button>
-    <span id="pageInfo" class="minimalist-info">Page ${currentPage} of ${totalPages}</span>
-    <button class="btn-outline-primary ms-2" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>
-      <i class="fas fa-chevron-right"></i>
+    <span class="mx-3">Page ${currentPage} of ${totalPages}</span>
+    <button class="btn btn-outline-primary" id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>
+      Next <i class="fas fa-chevron-right"></i>
     </button>
   `;
 
@@ -185,9 +206,6 @@ function renderPaginationControls(totalPages, currentPage) {
   });
 }
 
-/**
- * Edit an existing recipe (opens the Bootstrap modal).
- */
 async function editRecipe(recipeId) {
   const token = localStorage.getItem("accessToken");
   if (!token) {
@@ -219,10 +237,10 @@ async function editRecipe(recipeId) {
       ? recipe.instructions.join(", ")
       : recipe.instructions || "";
 
-    // Store recipeId in global variable
+    // Store ID
     currentEditedRecipeId = recipeId;
 
-    // Show the Bootstrap modal
+    // Show the modal
     const modalEl = document.getElementById("editRecipeModal");
     const modalInstance = new bootstrap.Modal(modalEl);
     modalInstance.show();
@@ -232,9 +250,6 @@ async function editRecipe(recipeId) {
   }
 }
 
-/**
- * Called when user clicks "Save Changes" in the Edit Recipe modal.
- */
 async function updateRecipeFromModal() {
   const token = localStorage.getItem("accessToken");
   if (!token) {
@@ -247,7 +262,6 @@ async function updateRecipeFromModal() {
     return;
   }
 
-  // Collect updated info
   const newTitle = document.getElementById("recipeTitleInput").value;
   const newDescription = document.getElementById("recipeDescriptionInput").value;
   const newIngredients = document.getElementById("recipeIngredientsInput").value;
@@ -256,8 +270,8 @@ async function updateRecipeFromModal() {
   const updateData = {
     title: newTitle,
     description: newDescription,
-    ingredients: newIngredients,      // Will be processed by backend
-    instructions: newInstructions,    // Will be processed by backend
+    ingredients: newIngredients,
+    instructions: newInstructions,
   };
 
   try {
@@ -274,13 +288,11 @@ async function updateRecipeFromModal() {
       throw new Error(errData.message || "Failed to update recipe.");
     }
 
-    // Hide the modal
     const modalEl = document.getElementById("editRecipeModal");
     const modalInstance = bootstrap.Modal.getInstance(modalEl);
     modalInstance.hide();
 
     showCustomToast("Recipe updated successfully!", "success");
-    // Reload the recipe list
     loadRecipes(currentPage);
   } catch (error) {
     console.error("Error updating recipe:", error);
@@ -288,9 +300,6 @@ async function updateRecipeFromModal() {
   }
 }
 
-/**
- * Delete a recipe using a confirmation modal.
- */
 function deleteRecipe(recipeId) {
   const token = localStorage.getItem("accessToken");
   if (!token) {
@@ -324,9 +333,6 @@ function deleteRecipe(recipeId) {
   );
 }
 
-/**
- * Add a recipe to wishlist (unchanged).
- */
 async function addRecipeToWishlist(recipeId) {
   const token = localStorage.getItem("accessToken");
   const userId = localStorage.getItem("userId");
@@ -358,9 +364,6 @@ async function addRecipeToWishlist(recipeId) {
   }
 }
 
-/**
- * Logout helper.
- */
 function logout(event) {
   if (event) event.preventDefault();
   localStorage.removeItem("accessToken");
@@ -369,12 +372,8 @@ function logout(event) {
   window.location.href = "login.html";
 }
 
-/**
- * Custom paging approach from older code. If used, keep it or remove if not needed.
- */
 function changePage(direction) {
   currentPage += direction;
   loadRecipes(currentPage);
-  // Scroll to the top smoothly
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

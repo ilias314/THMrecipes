@@ -6,9 +6,9 @@
   <title>Profile - Recipe App</title>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <!-- Font Awesome (for star icons) -->
+  <!-- Font Awesome (for icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" />
-  <!-- Unified Styles -->
+  <!-- Your main stylesheet -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -16,7 +16,8 @@
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
     <a class="navbar-brand" href="#" onclick="redirectHome()">THM Recipes</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProfile" aria-controls="navbarProfile" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProfile"
+            aria-controls="navbarProfile" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarProfile">
@@ -25,6 +26,12 @@
         <li class="nav-item"><a class="nav-link" href="wishlist.html">Wishlist</a></li>
         <li class="nav-item"><a class="nav-link active" aria-current="page" href="profile.html">Profile</a></li>
         <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+        <!-- Dark Mode Toggle -->
+        <li class="nav-item">
+          <button class="btn btn-sm btn-outline-light ms-3" id="darkModeBtn" onclick="toggleDarkMode()">
+            <i id="darkModeIcon" class="fas fa-moon"></i>
+          </button>
+        </li>
       </ul>
     </div>
   </div>
@@ -65,7 +72,7 @@
   </div>
 </div>
 
-<!-- Edit Profile Modal (remains unchanged) -->
+<!-- Edit Profile Modal -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -97,6 +104,9 @@
   </div>
 </div>
 
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
 <!-- Footer -->
 <footer>
   <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
@@ -106,5 +116,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="profile.js"></script>
 <script src="auth.js"></script>
+<!-- Our dark mode logic -->
+<script src="dark-mode.js"></script>
 </body>
 </html>

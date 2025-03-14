@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
             imageUrl = imageResult.image_url;
           } else {
             console.error("Image upload failed:", imageResult);
-            showCustomToast("⚠Image upload failed. Using default image.", "warning");
+            showCustomToast("⚠ Image upload failed. Using default image.", "warning");
           }
         }
 
