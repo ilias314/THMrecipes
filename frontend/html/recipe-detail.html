@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recipe Detail - Recipe App</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <!-- Font Awesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous"/>
+  <!-- styles -->
+  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    .detail-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 50px);
+      margin-top: 60px;
+      padding: 1rem;
+    }
+    .detail-card {
+      width: 100%;
+      max-width: 800px;
+    }
+    .recipe-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+<!-- Responsive Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="recipes.html" onclick="redirectHome()">THM Recipes</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDetail"
+            aria-controls="navbarDetail" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarDetail">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="recipes.html">Recipes</a></li>
+        <li class="nav-item"><a class="nav-link" href="wishlist.html">Wishlist</a></li>
+        <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+        <!-- Dark Mode Toggle Button -->
+        <li class="nav-item">
+          <button class="btn btn-sm btn-outline-light ms-3" id="darkModeBtn" onclick="toggleDarkMode()">
+            <i id="darkModeIcon" class="fas fa-moon"></i>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Detail Container -->
+<div class="detail-container">
+  <div class="card shadow detail-card">
+    <img id="recipeImage" src="../default-image.jpg" alt="Recipe Image" class="card-img-top recipe-image" />
+    <div class="card-header custom-card-header text-center">
+      <h4 id="recipeTitle"></h4>
+    </div>
+    <div class="card-body">
+      <h5>Description</h5>
+      <p id="recipeDescription"></p>
+      <hr />
+      <h5>Ingredients</h5>
+      <ul id="ingredientsList"></ul>
+      <hr />
+      <h5>Instructions</h5>
+      <ul id="instructionsList"></ul>
+      <div id="recipeActions" class="mt-3 text-center"></div>
+      <hr />
+      <h5>Comments</h5>
+      <div id="commentsList"></div>
+      <form id="commentForm">
+        <label for="comment" class="form-label">Add a comment:</label>
+        <textarea id="comment" name="comment" class="form-control" required></textarea>
+        <button type="submit" class="btn btn-primary mt-3">Submit</button>
+      </form>
+      <hr />
+      <h5>Ratings</h5>
+      <div id="ratingsList"></div>
+      <form id="ratingForm">
+        <label for="rating" class="form-label">Rate this recipe:</label>
+        <select id="rating" name="rating" class="form-control" required>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+        <button type="submit" class="btn btn-primary mt-3">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Recipe Modal -->
+<div class="modal fade" id="editRecipeModal" tabindex="-1" aria-labelledby="editRecipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header custom-card-header">
+        <h5 class="modal-title" id="editRecipeModalLabel">Edit Recipe</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRecipeForm">
+          <div class="mb-3">
+            <label for="recipeTitleInput" class="form-label">Title</label>
+            <input type="text" class="form-control" id="recipeTitleInput" required />
+          </div>
+          <div class="mb-3">
+            <label for="recipeDescriptionInput" class="form-label">Description</label>
+            <textarea class="form-control" id="recipeDescriptionInput" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="recipeIngredientsInput" class="form-label">Ingredients (comma separated)</label>
+            <textarea class="form-control" id="recipeIngredientsInput" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="recipeInstructionsInput" class="form-label">Instructions (comma separated)</label>
+            <textarea class="form-control" id="recipeInstructionsInput" rows="4" required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="updateRecipeFromModal()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Global Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header custom-card-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Please Confirm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmationMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmButton" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Comment Modal -->
+<div class="modal fade" id="editCommentModal" tabindex="-1" aria-labelledby="editCommentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header custom-card-header">
+        <h5 class="modal-title" id="editCommentModalLabel">Edit Comment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editCommentForm">
+          <div class="mb-3">
+            <label for="commentContentInput" class="form-label">Comment</label>
+            <textarea class="form-control" id="commentContentInput" rows="3" required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="updateCommentFromModal()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Rating Modal -->
+<div class="modal fade" id="editRatingModal" tabindex="-1" aria-labelledby="editRatingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header custom-card-header">
+        <h5 class="modal-title" id="editRatingModalLabel">Edit Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRatingForm">
+          <div class="mb-3">
+            <label for="ratingValueInput" class="form-label">Rating (1-5)</label>
+            <input type="number" class="form-control" id="ratingValueInput" min="1" max="5" required/>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="updateRatingFromModal()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Toast Container -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Footer -->
+<footer>
+  <p class="mb-0">&copy; 2025 Recipe App. All rights reserved.</p>
+</footer>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/recipe-detail.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  // Global Confirmation Dialog Helper
+  function showConfirmationDialog(message, onConfirm) {
+    const modalElement = document.getElementById('confirmationModal');
+    const messageElement = document.getElementById('confirmationMessage');
+    const confirmButton = document.getElementById('confirmButton');
+    messageElement.textContent = message;
+    const newConfirmButton = confirmButton.cloneNode(true);
+    confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+    newConfirmButton.addEventListener('click', () => {
+      const modalInstance = bootstrap.Modal.getInstance(modalElement);
+      modalInstance.hide();
+      onConfirm();
+    });
+    const confirmationModal = new bootstrap.Modal(modalElement);
+    confirmationModal.show();
+  }
+
+  // Global Toast Function
+  function showCustomToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.classList.add("toast-custom", type);
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add("show"), 100);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => container.removeChild(toast), 500);
+    }, 3000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+:root {
+  --navy:   #001f3f;    /* Dark Blue */
+  --yellow: #FFDC00;    /* Yellow */
+  --beige:  #F5F5DC;    /* Beige */
+}
+
+/* === Background Image(login/register) === */
+.bg-image {
+  background: url("../default-image.jpg") center/cover no-repeat;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Overlay on top of background image */
+.bg-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 31, 63, 0.6); /* 60% Navy overlay */
+  z-index: -1;
+}
+
+/* === Global Base === */
+body {
+  font-family: 'Open Sans', sans-serif;
+  margin: 0;
+  padding-top: 30px;
+  background-color: var(--beige);
+  color: var(--navy);
+}
+
+/* full height and center content */
+.full-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Navbar === */
+.navbar {
+  background: linear-gradient(135deg, var(--navy) 0%, #002b4f 100%);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.navbar .navbar-brand {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-right: 2rem;
+}
+
+.navbar .navbar-nav .nav-link {
+  color: var(--yellow);
+  font-weight: 500;
+  margin-left: 1rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border-radius: 4px;
+}
+
+.navbar .navbar-nav .nav-link:hover {
+  color: var(--beige);
+  background-color: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
+.navbar .navbar-toggler {
+  border: none;
+}
+.navbar .navbar-toggler:focus,
+.navbar .navbar-toggler:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* === Footer === */
+footer {
+  background-color: var(--navy);
+  color: var(--yellow);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  margin-top: 0;
+}
+footer p {
+  margin: 0;
+}
+
+/* === Container Spacing === */
+.container {
+  padding-top: 20px;
+}
+.detail-container {
+  margin-top: 40px;
+}
+
+/* === Hero Section (for index page) === */
+.hero-section {
+  background: url("../default-image.jpg") center/cover no-repeat;
+  min-height: calc(100vh - 50px);
+  position: relative;
+  margin-top: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  color: var(--yellow);
+}
+.hero-section .overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--navy);
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+@keyframes fadeIn {
+  to {
+    opacity: 0.6;
+  }
+}
+.hero-section .hero-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* === Card Styling (for forms, recipes, etc.) === */
+.card {
+  background-color: rgba(245, 245, 220, 0.9);
+  color: var(--navy);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 31, 63, 0.4);
+  margin-bottom: 30px;
+}
+.card-header {
+  background-color: var(--navy);
+  color: var(--yellow);
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+.card-img-top {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* === Button Styling === */
+.btn {
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--yellow);
+  color: var(--navy);
+}
+.btn-primary:hover {
+  background-color: var(--beige);
+  color: var(--navy);
+}
+
+.custom-card-header {
+  background-color: var(--navy);
+  color: var(--yellow);
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+/* === Toast Notifications === */
+.toast-container {
+  z-index: 1055;
+}
+
+.toast-custom {
+  background-color: var(--navy);
+  color: var(--yellow);
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.toast-custom.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.toast-custom.success {
+  background-color: var(--yellow);
+  color: var(--navy);
+}
+.toast-custom.danger {
+  background-color: var(--navy);
+  color: var(--yellow);
+}
+.toast-custom.warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+/* === Pagination === */
+.minimalist-pagination {
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.minimalist-info {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--navy);
+  margin: 0 1rem;
+}
+/* Outline button overrides for minimalistic look */
+.minimalist-pagination .btn-outline-primary {
+  border: 1px solid var(--navy);
+  color: var(--navy);
+  background-color: transparent;
+  border-radius: 15px;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+.minimalist-pagination .btn-outline-primary:hover:not(:disabled) {
+  background-color: var(--navy);
+  color: var(--yellow);
+}
+.minimalist-pagination .btn-outline-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.custom-pagination-btn {
+  border-radius: 15px;
+  border: 1px solid var(--navy);
+  background-color: transparent;
+  color: var(--navy);
+  transition: all 0.3s ease;
+}
+.btn.custom-pagination-btn:hover:not(:disabled) {
+  background-color: var(--navy);
+  color: var(--yellow);
+}
+.btn.custom-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === Dark Mode Overrides === */
+body.dark-mode {
+  /* navy (#001f3f) for the main background */
+  background-color: #001f3f;
+  color: #f5f5f5; /* Light text for contrast */
+
+
+  --navy: #001f3f;
+  --yellow: #ffc20a;
+  --beige: #003059;
+}
+
+/* Card background in dark mode  */
+body.dark-mode .card {
+  background-color: #002b4f;
+  color: #f5f5f5;
+}
+
+/* Navbar in dark mode  */
+body.dark-mode .navbar {
+  background: #000f2d;
+}
+
+/* Card header in dark mode */
+body.dark-mode .card-header {
+  background-color: #000f2d;
+  color: #ffc20a;
+}
+
