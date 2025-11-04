@@ -1,31 +1,27 @@
-= Starter
+# THMrecipes
 
-image:https://img.shields.io/badge/vert.x-4.5.13-purple.svg[link="https://vertx.io"]
+A simple recipe web app built with **Java (Vert.x)** for the backend and **HTML/CSS/JavaScript** for the frontend.  
+Developed as a university project at THM in 2024.
 
-This application was generated using http://start.vertx.io
+## Features
+- Login or register
+- delete or modify account (name , email , password)
+- View and add recipes (image , description and instructions)
+- delete or modify own recipies.
+- view and add comments and star reviews 
+- own recipes ,comments and reviews appear on user profile.
+- add recipes to wishlist
+- dark mode
 
-== Building
+## 🛠️ Setup
 
-To launch your tests:
-```
-./mvnw clean test
-```
+### Prerequisites
+- Java 11+  
+- Maven 
 
-To package your application:
-```
-./mvnw clean package
-```
-
-To run your application:
-```
+### Run
+```bash
+git clone https://github.com/ilias314/THMrecipes.git
+cd THMrecipes
 ./mvnw clean compile exec:java
-```
-
-== Help
-
-* https://vertx.io/docs/[Vert.x Documentation]
-* https://stackoverflow.com/questions/tagged/vert.x?sort=newest&pageSize=15[Vert.x Stack Overflow]
-* https://groups.google.com/forum/?fromgroups#!forum/vertx[Vert.x User Group]
-* https://discord.gg/6ry7aqPWXy[Vert.x Discord]
-
-
+Then open: http://localhost:8080
