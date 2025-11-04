@@ -25,3 +25,6 @@ git clone https://github.com/ilias314/THMrecipes.git
 cd THMrecipes
 ./mvnw clean compile exec:java
 Then open: http://localhost:8080
+
+you can  check the folder "WEBSITE SCREEN_CASTING" for a video showing all the website features. 
+
