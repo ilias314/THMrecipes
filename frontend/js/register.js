@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8880";
 
 async function register() {
   const username = document.getElementById("username").value.trim();

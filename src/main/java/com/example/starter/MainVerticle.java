@@ -41,8 +41,8 @@ public class MainVerticle extends AbstractVerticle {
       .setPort(3306)
       .setHost("localhost")  // Host anpassen
       .setDatabase("ThmRecipes")   // Datenbankname
-      .setUser("root")              // Dein Benutzername
-      .setPassword("")   // Dein Passwort
+      .setUser("root")              // Benutzername
+      .setPassword("")   //  Passwort
       .setSslMode(io.vertx.mysqlclient.SslMode.DISABLED) // Falls SSL erforderlich
       .setTrustAll(true); // Falls der Server ein unsicheres Zertifikat hat
 
@@ -634,7 +634,7 @@ public class MainVerticle extends AbstractVerticle {
     // ============================================================
     // Start HTTP Server
     // ============================================================
-    vertx.createHttpServer().requestHandler(router).listen(8080, http -> {
+    vertx.createHttpServer().requestHandler(router).listen(8880, http -> {
       if (http.succeeded()) {
         startPromise.complete();
         System.out.println("✅ HTTP-Server läuft auf Port 8080");
@@ -945,8 +945,7 @@ public class MainVerticle extends AbstractVerticle {
                 .put("user_id", row.getInteger("user_id"))
                 .put("title", row.getString("title"))
                 .put("description", row.getString("description"))
-                .put("image_url", row.getString("image_url"))
-                .put("created_at", row.getLocalDateTime("created_at").toString());
+                .put("image_url", row.getString("image_url"));
               String ingredientsText = row.getString("ingredients");
               recipe.put("ingredients", new JsonArray(Arrays.asList(ingredientsText.split(",\\s*"))));
               String instructionsText = row.getString("instructions");

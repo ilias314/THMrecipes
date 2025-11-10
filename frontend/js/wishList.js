@@ -1,7 +1,7 @@
 /**
  * Manages the user's wishlist: displaying, adding, and removing recipes.
  */
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8880";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadWishlist();

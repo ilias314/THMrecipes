@@ -1,6 +1,6 @@
 
 
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8880";
 let currentPage = 1;
 const itemsPerPage = 12; // Number of recipes to show per page
 
