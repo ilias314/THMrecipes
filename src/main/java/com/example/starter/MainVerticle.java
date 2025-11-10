@@ -25,6 +25,7 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.handler.CorsHandler;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.*;
 
@@ -908,6 +909,7 @@ public class MainVerticle extends AbstractVerticle {
     String description = body.getString("description");
     String ingredients = body.getString("ingredients");
     String instructions = body.getString("instructions");
+    LocalDateTime timestamp = LocalDateTime.now();
     String imageUrl = body.containsKey("image_url") ? body.getString("image_url") : "/images/default.png";
     System.out.println("📦 Received recipe data:");
     System.out.println("Title: " + title);
@@ -915,8 +917,8 @@ public class MainVerticle extends AbstractVerticle {
     System.out.println("Ingredients (Plain Text): " + ingredients);
     System.out.println("Instructions (Plain Text): " + instructions);
     System.out.println("Image URL: " + imageUrl);
-    String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url) VALUES (?, ?, ?, ?, ?, ?)";
-    client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl), ar -> {
+    String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl,timestamp), ar -> {
       if (ar.succeeded()) {
         System.out.println("✅ Recipe successfully saved: " + title);
         context.response()
@@ -1212,8 +1214,9 @@ public class MainVerticle extends AbstractVerticle {
     }
     Integer userId = context.user().principal().getInteger("userId");
     String recipeId = context.pathParam("recipeId");
-    String sql = "INSERT INTO ratings (user_id, recipe_id, rating) VALUES (?, ?, ?)";
-    client.preparedQuery(sql).execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue), ar -> {
+    LocalDateTime Time = LocalDateTime.now();
+    String sql = "INSERT INTO ratings (user_id, recipe_id, rating, created_at) VALUES (?, ?, ?, ?)";
+    client.preparedQuery(sql).execute(Tuple.of(userId, Integer.parseInt(recipeId), ratingValue ,Time), ar -> {
       if (ar.succeeded()) {
         context.response()
           .setStatusCode(201)
@@ -1419,6 +1422,7 @@ public class MainVerticle extends AbstractVerticle {
   private void addComment(RoutingContext context) {
     Integer userId = context.user().principal().getInteger("userId");
     String recipeId = context.pathParam("recipeId");
+    LocalDateTime createdAt = LocalDateTime.now();
     JsonObject body = context.getBodyAsJson();
     if (body == null || !body.containsKey("content")) {
       context.response()
@@ -1436,8 +1440,8 @@ public class MainVerticle extends AbstractVerticle {
     client.preparedQuery("SELECT id FROM recipes WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(recipeId)), recipeCheck -> {
         if (recipeCheck.succeeded() && recipeCheck.result().size() > 0) {
-          client.preparedQuery("INSERT INTO comments (user_id, recipe_id, content) VALUES (?, ?, ?)")
-            .execute(Tuple.of(userId, Integer.parseInt(recipeId), content), ar -> {
+          client.preparedQuery("INSERT INTO comments (user_id, recipe_id, content , created_at) VALUES (?, ?, ?, ?)")
+            .execute(Tuple.of(userId, Integer.parseInt(recipeId), content , createdAt), ar -> {
               if (ar.succeeded()) {
                 client.preparedQuery("SELECT LAST_INSERT_ID() as id")
                   .execute(idResult -> {
@@ -1499,7 +1503,6 @@ public class MainVerticle extends AbstractVerticle {
                     .put("recipeId", row.getInteger("recipe_id"))
                     .put("content", row.getString("content"))
                     .put("createdAt", row.getLocalDateTime("created_at").toString())
-                    .put("updatedAt", row.getLocalDateTime("updated_at").toString())
                     .put("username", row.getString("username"));
                   comments.add(comment);
                 });
@@ -1532,7 +1535,6 @@ public class MainVerticle extends AbstractVerticle {
             .put("recipeId", row.getInteger("recipe_id"))
             .put("content", row.getString("content"))
             .put("createdAt", row.getLocalDateTime("created_at").toString())
-            .put("updatedAt", row.getLocalDateTime("updated_at").toString())
             .put("username", row.getString("username"));
           context.response()
             .putHeader("content-type", "application/json")
