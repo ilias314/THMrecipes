@@ -1,31 +1,98 @@
 # THMrecipes
 
-A simple recipe web app built with **Java (Vert.x)** for the backend and **HTML/CSS/JavaScript** for the frontend.  
-Developed as a university project at THM in 2024.
+A modern, full-stack web application for sharing and discovering recipes, built with Java Vert.x backend and vanilla JavaScript frontend. Developed as a university project in my second semester.
 
-## Features
-- Login or register
-- delete or modify account (name , email , password)
-- View and add recipes (image , description and instructions)
-- delete or modify own recipies.
-- view and add comments and star reviews 
-- own recipes ,comments and reviews appear on user profile.
-- add recipes to wishlist
-- dark mode
+## ✨ Features
+### User Management
 
-## 🛠️ Setup
+- 🔐 User registration and authentication
+- 👤 Profile management (update username, email, password)
+- 🗑️ Account deletion with cascade cleanup
+- 🔄 Token-based session management
 
-### Prerequisites
-- Java 11+  
-- Maven 
+### Recipe Features
+
+- ➕ Create recipes with images, ingredients, and instructions
+- 📖 Browse all recipes with pagination
+- ✏️ Edit and delete own recipes
+- 📸 Image upload functionality
+- ⭐ View average ratings per recipe
+
+### Social Features
+
+- 💬 Comment on recipes
+- ⭐ Rate recipes (1-5 stars)
+- 💖 Add recipes to personal wishlist
+- 👁️ View other users' recipes
+- 📊 Track personal contributions (recipes, comments, ratings)
+
+### UI/UX
+
+- 🎨 Modern, responsive design
+- 🌓 Dark mode support
+- 📱 Mobile-friendly interface
+- 🔔 Toast notifications for user feedback
+- ⚡ Fast, asynchronous operations
+
+
+### 🛠️ Technology Stack
+#### Backend
+
+- Framework: Vert.x 4.5.10 (reactive, event-driven)
+- Language: Java 17
+- Database: MariaDB/MySQL
+- Authentication: JWT (JSON Web Tokens)
+- Password Hashing: BCrypt
+- Build Tool: Maven
+
+#### Frontend
+
+- Core: HTML5, CSS3, Vanilla JavaScript (ES6+)
+- UI Framework: Bootstrap 5.3
+- Icons: Font Awesome 6.0
+- Fonts: Google Fonts (Open Sans, Playfair Display, Montserrat)
+
+#### Development Tools
+
+- API Testing: HTTP Client (IntelliJ IDEA)
+- Version Control: Git
 
 ### Run
+
+#### Prerequisites
+
+- Java 17 or higher
+- Maven 3.6+
+- MariaDB/MySQL server
+- Git
+#### clone
 ```bash
 git clone https://github.com/ilias314/THMrecipes.git
 cd THMrecipes
-./mvnw clean compile exec:java
-Then open: http://localhost:8080
 ```
-you can  check the folder "WEBSITE SCREEN_CASTING" for a video showing all the website features.
+#### Set up the database
+```bash
+CREATE DATABASE ThmRecipes;
+   USE ThmRecipes;
+
+   -- (Create tables: users, recipes, comments, ratings, wishlist)
+```
+#### Configure database connection
+ - Edit src/main/java/com/example/starter/MainVerticle.java:
+    ```bash
+     MySQLConnectOptions connectOptions = new MySQLConnectOptions()
+     .setPort(3306)
+     .setHost("localhost")
+     .setDatabase("ThmRecipes")
+     .setUser("your_username")
+     .setPassword("your_password");
+    ```
+#### build and run 
+```bash
+./mvnw clean compile exec:java
+```
+Then open: http://localhost:8880/frontend/html/index.html
+
+
 
 
