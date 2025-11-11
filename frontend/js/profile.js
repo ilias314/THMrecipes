@@ -18,7 +18,7 @@ async function fetchProfile() {
   }
 
   try {
-    const profileResponse = await fetch(`http://localhost:8080/users/${userId}`, {
+    const profileResponse = await fetch(`http://localhost:8880/users/${userId}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
@@ -40,7 +40,7 @@ async function fetchProfile() {
     const user = await profileResponse.json();
     displayProfile(user);
 
-    const recipesResponse = await fetch(`http://localhost:8080/users/${userId}/recipes`, {
+    const recipesResponse = await fetch(`http://localhost:8880/users/${userId}/recipes`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
@@ -48,7 +48,7 @@ async function fetchProfile() {
     const userRecipes = await recipesResponse.json();
     displayUserRecipes(userRecipes);
 
-    const commentsResponse = await fetch(`http://localhost:8080/users/${userId}/comments`, {
+    const commentsResponse = await fetch(`http://localhost:8880/users/${userId}/comments`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
@@ -56,7 +56,7 @@ async function fetchProfile() {
     const comments = await commentsResponse.json();
     displayUserComments(comments);
 
-    const ratingsResponse = await fetch(`http://localhost:8080/users/${userId}/ratings`, {
+    const ratingsResponse = await fetch(`http://localhost:8880/users/${userId}/ratings`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
@@ -115,7 +115,7 @@ async function displayUserRecipes(recipes) {
 async function fetchAndDisplayAverageRatingForProfile(recipeId) {
   try {
     const token = localStorage.getItem("accessToken");
-    const response = await fetch(`http://localhost:8080/recipes/${recipeId}/ratings`, {
+    const response = await fetch(`http://localhost:8880/recipes/${recipeId}/ratings`, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
     if (!response.ok) throw new Error("Failed to fetch ratings");
@@ -186,7 +186,7 @@ function displayUserRatings(ratings) {
 function openEditProfileModal() {
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
-  fetch(`http://localhost:8080/users/${userId}`, {
+  fetch(`http://localhost:8880/users/${userId}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
   })
@@ -212,7 +212,7 @@ async function updateProfile() {
   const updateData = { username, email };
   if (password) updateData.password = password;
   try {
-    let response = await fetch(`http://localhost:8080/users/${userId}`, {
+    let response = await fetch(`http://localhost:8880/users/${userId}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(updateData),
@@ -221,7 +221,7 @@ async function updateProfile() {
       token = await refreshToken();
       if (token) {
         localStorage.setItem("accessToken", token);
-        response = await fetch(`http://localhost:8080/users/${userId}`, {
+        response = await fetch(`http://localhost:8880/users/${userId}`, {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           body: JSON.stringify(updateData),
@@ -259,7 +259,7 @@ function deleteProfile() {
   const token = localStorage.getItem("accessToken");
   showConfirmationDialog("Are you sure you want to delete your profile? This action cannot be undone.", async () => {
     try {
-      const response = await fetch(`http://localhost:8080/users/${userId}`, {
+      const response = await fetch(`http://localhost:8880/users/${userId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
