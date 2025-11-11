@@ -1384,7 +1384,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private void getUserRatings(RoutingContext context) {
-    String userId = context.pathParam("user_id");
+    String userId = context.pathParam("userId");
     client.preparedQuery("SELECT id FROM users WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
         if (userCheck.succeeded() && userCheck.result().size() > 0) {
@@ -1647,7 +1647,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private void getUserComments(RoutingContext context) {
-    String userId = context.pathParam("user_id");
+    String userId = context.pathParam("userId");
     try {
       int id = Integer.parseInt(userId);
     } catch (NumberFormatException e) {
@@ -1670,8 +1670,7 @@ public class MainVerticle extends AbstractVerticle {
                   .put("recipeId", row.getInteger("recipe_id"))
                   .put("recipeTitle", row.getString("recipe_title"))
                   .put("content", row.getString("content"))
-                  .put("createdAt", row.getLocalDateTime("created_at").toString())
-                  .put("updatedAt", row.getLocalDateTime("updated_at").toString());
+                  .put("createdAt", row.getLocalDateTime("created_at").toString());
                 comments.add(comment);
               });
               context.response()
