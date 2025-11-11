@@ -909,7 +909,7 @@ public class MainVerticle extends AbstractVerticle {
     String description = body.getString("description");
     String ingredients = body.getString("ingredients");
     String instructions = body.getString("instructions");
-    LocalDateTime timestamp = LocalDateTime.now();
+    LocalDateTime time = LocalDateTime.now();
     String imageUrl = body.containsKey("image_url") ? body.getString("image_url") : "/images/default.png";
     System.out.println("📦 Received recipe data:");
     System.out.println("Title: " + title);
@@ -918,7 +918,7 @@ public class MainVerticle extends AbstractVerticle {
     System.out.println("Instructions (Plain Text): " + instructions);
     System.out.println("Image URL: " + imageUrl);
     String sql = "INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl,timestamp), ar -> {
+    client.preparedQuery(sql).execute(Tuple.of(userId, title, description, ingredients, instructions, imageUrl,time), ar -> {
       if (ar.succeeded()) {
         System.out.println("✅ Recipe successfully saved: " + title);
         context.response()
@@ -1384,7 +1384,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private void getUserRatings(RoutingContext context) {
-    String userId = context.pathParam("userId");
+    String userId = context.pathParam("user_id");
     client.preparedQuery("SELECT id FROM users WHERE id = ?")
       .execute(Tuple.of(Integer.parseInt(userId)), userCheck -> {
         if (userCheck.succeeded() && userCheck.result().size() > 0) {
@@ -1647,7 +1647,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private void getUserComments(RoutingContext context) {
-    String userId = context.pathParam("userId");
+    String userId = context.pathParam("user_id");
     try {
       int id = Integer.parseInt(userId);
     } catch (NumberFormatException e) {

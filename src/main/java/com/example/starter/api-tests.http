@@ -1,5 +1,5 @@
 ### Environment Variables (optional)
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:8880
 @accessToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjExMCwiaWF0IjoxNzQyMTM5OTIxLCJleHAiOjE3NDIxNDM1MjF9.ilQO0hHv1J0ALQMHMvXK0nzfZocLH0zrWR-5h3zMW-U
 @refreshToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjExMCwiaWF0IjoxNzQyMTM5OTIxLCJleHAiOjE3NDIyMjYzMjF9.5FauQYyV37qJ6rfSMn_qIZ3CXsWyKfRELJvXqlw6nq4
 @userId = 110
