@@ -2,40 +2,40 @@
 
 A modern, full-stack web application for sharing and discovering recipes, built with Java Vert.x backend and vanilla JavaScript frontend. Developed as a university project in my second semester.
 
-## ✨ Features
+## Features
 ### User Management
 
-- 🔐 User registration and authentication
-- 👤 Profile management (update username, email, password)
-- 🗑️ Account deletion with cascade cleanup
-- 🔄 Token-based session management
+-  User registration and authentication
+-  Profile management (update username, email, password)
+-  Account deletion with cascade cleanup
+-  Token-based session management
 
 ### Recipe Features
 
-- ➕ Create recipes with images, ingredients, and instructions
-- 📖 Browse all recipes with pagination
-- ✏️ Edit and delete own recipes
-- 📸 Image upload functionality
-- ⭐ View average ratings per recipe
+-  Create recipes with images, ingredients, and instructions
+-  Browse all recipes with pagination
+-  Edit and delete own recipes
+-  Image upload functionality
+-  View average ratings per recipe
 
 ### Social Features
 
-- 💬 Comment on recipes
-- ⭐ Rate recipes (1-5 stars)
-- 💖 Add recipes to personal wishlist
-- 👁️ View other users' recipes
-- 📊 Track personal contributions (recipes, comments, ratings)
+-  Comment on recipes
+-  Rate recipes (1-5 stars)
+-  Add recipes to personal wishlist
+-  View other users' recipes
+-  Track personal contributions (recipes, comments, ratings)
 
 ### UI/UX
 
-- 🎨 Modern, responsive design
-- 🌓 Dark mode support
-- 📱 Mobile-friendly interface
-- 🔔 Toast notifications for user feedback
-- ⚡ Fast, asynchronous operations
+-  Modern, responsive design
+-  Dark mode support
+-  Mobile-friendly interface
+-  Toast notifications for user feedback
+-  Fast, asynchronous operations
 
 
-### 🛠️ Technology Stack
+###  Technology Stack
 #### Backend
 
 - Framework: Vert.x 4.5.10 (reactive, event-driven)
